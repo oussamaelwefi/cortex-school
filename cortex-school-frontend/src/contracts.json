@@ -1,0 +1,3131 @@
+[
+  {
+    "id": "create_academic_year",
+    "title": "Create academic year",
+    "method": "POST",
+    "path": "/academic-years/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 32,
+          "required": true
+        },
+        "starts_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "ends_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "AcademicYearCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_academic_years",
+    "title": "List academic years",
+    "method": "GET",
+    "path": "/academic-years/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_academic_year",
+    "title": "Get academic year",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "replace_academic_year",
+    "title": "Replace academic year",
+    "method": "PUT",
+    "path": "/academic-years/{year_id}/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 32,
+          "required": true
+        },
+        "starts_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "ends_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "AcademicYearCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "publish_academic_year",
+    "title": "Publish academic year",
+    "method": "POST",
+    "path": "/academic-years/{year_id}/publish/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_academic_year_publish_readiness",
+    "title": "Get academic year publish readiness",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/readiness/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "close_academic_year",
+    "title": "Close academic year",
+    "method": "POST",
+    "path": "/academic-years/{year_id}/close/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_academic_calendar",
+    "title": "Get academic calendar",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/calendar/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_calendar_entries",
+    "title": "List calendar entries",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/calendar/entries/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_calendar_entry",
+    "title": "Create calendar entry",
+    "method": "POST",
+    "path": "/academic-years/{year_id}/calendar/entries/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "entry_type": {
+          "type": "string",
+          "enum": [
+            "term",
+            "holiday",
+            "break",
+            "non_instruction_day"
+          ],
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "starts_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "ends_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "CalendarEntryRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "get_calendar_entry",
+    "title": "Get calendar entry",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/calendar/entries/{entry_id}/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "entry_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "replace_calendar_entry",
+    "title": "Replace calendar entry",
+    "method": "PUT",
+    "path": "/academic-years/{year_id}/calendar/entries/{entry_id}/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "entry_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "entry_type": {
+          "type": "string",
+          "enum": [
+            "term",
+            "holiday",
+            "break",
+            "non_instruction_day"
+          ],
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "starts_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "ends_on": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "CalendarEntryRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "delete_calendar_entry",
+    "title": "Delete calendar entry",
+    "method": "DELETE",
+    "path": "/academic-years/{year_id}/calendar/entries/{entry_id}/",
+    "module": "academic_years",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "entry_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "chat",
+    "title": "Chat",
+    "method": "POST",
+    "path": "/ai/chat/",
+    "module": "ai",
+    "role": "shared",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "name": "ChatRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "create_teacher_update_draft",
+    "title": "Create teacher update draft",
+    "method": "POST",
+    "path": "/ai/teacher-update-draft/",
+    "module": "ai",
+    "role": "teacher",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "classroom_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "classroom"
+                  ],
+                  "required": true
+                }
+              },
+              "name": "ClassroomTarget"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "students"
+                  ],
+                  "required": true
+                },
+                "student_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "required": true,
+                  "min_length": 1,
+                  "max_length": 500
+                }
+              },
+              "name": "StudentsTarget"
+            }
+          ],
+          "discriminator": "type",
+          "required": true
+        },
+        "observations": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 3000,
+          "required": true
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "warm",
+            "concise",
+            "formal"
+          ],
+          "required": false,
+          "default": "warm"
+        },
+        "output_language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "fr",
+            "ar"
+          ],
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "TeacherUpdateDraftRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "get_school_analytics",
+    "title": "Get school analytics",
+    "method": "GET",
+    "path": "/analytics/",
+    "module": "analytics",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "7",
+          "30",
+          "90"
+        ],
+        "name": "days",
+        "in": "query",
+        "required": false,
+        "default": "30"
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_today_teacher_attendance",
+    "title": "Get today teacher attendance",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/attendance",
+    "module": "attendance",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_dated_teacher_attendance",
+    "title": "Get dated teacher attendance",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/attendance/{school_date}",
+    "module": "attendance",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "name": "school_date",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "put_teacher_attendance",
+    "title": "Put teacher attendance",
+    "method": "PUT",
+    "path": "/teacher/classrooms/{classroom_id}/attendance/{school_date}",
+    "module": "attendance",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "name": "school_date",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "placement_id": {
+                "type": "string",
+                "format": "uuid",
+                "required": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "present",
+                  "absent",
+                  "late",
+                  "excused"
+                ],
+                "required": true
+              },
+              "note": {
+                "type": "string",
+                "min_length": 1,
+                "max_length": 1000,
+                "nullable": true,
+                "required": false
+              }
+            },
+            "name": "AttendanceEntryRequest"
+          },
+          "required": true
+        }
+      },
+      "name": "AttendanceSheetRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_guardian_student_attendance",
+    "title": "List guardian student attendance",
+    "method": "GET",
+    "path": "/guardian/students/{student_id}/attendance",
+    "module": "attendance",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 100
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_admin_attendance_submissions",
+    "title": "Get admin attendance submissions",
+    "method": "GET",
+    "path": "/attendance/submissions",
+    "module": "attendance",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "school_date",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_classroom",
+    "title": "Create classroom",
+    "method": "POST",
+    "path": "/academic-years/{year_id}/classrooms/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 64,
+          "required": true
+        }
+      },
+      "name": "ClassroomRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_classrooms",
+    "title": "List classrooms",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/classrooms/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_classroom",
+    "title": "Get classroom",
+    "method": "GET",
+    "path": "/classrooms/{classroom_id}/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "replace_classroom",
+    "title": "Replace classroom",
+    "method": "PUT",
+    "path": "/classrooms/{classroom_id}/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 64,
+          "required": true
+        }
+      },
+      "name": "ClassroomRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "delete_classroom",
+    "title": "Delete classroom",
+    "method": "DELETE",
+    "path": "/classrooms/{classroom_id}/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_classroom_calendar",
+    "title": "Get classroom calendar",
+    "method": "GET",
+    "path": "/classrooms/{classroom_id}/calendar/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_class_placement",
+    "title": "Create class placement",
+    "method": "POST",
+    "path": "/classrooms/{classroom_id}/placements/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "enrollment_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "effective_from": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "effective_until": {
+          "type": "string",
+          "format": "date",
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "ClassEnrollmentCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_classroom_placements",
+    "title": "List classroom placements",
+    "method": "GET",
+    "path": "/classrooms/{classroom_id}/placements/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_enrollment_placements",
+    "title": "List enrollment placements",
+    "method": "GET",
+    "path": "/enrollments/{enrollment_id}/placements/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "enrollment_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "transfer_enrollment",
+    "title": "Transfer enrollment",
+    "method": "POST",
+    "path": "/enrollments/{enrollment_id}/transfer/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "enrollment_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "classroom_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "effective_from": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "ClassTransferRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "create_teacher_assignment",
+    "title": "Create teacher assignment",
+    "method": "POST",
+    "path": "/classrooms/{classroom_id}/teacher-assignments/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "teacher_workos_user_id": {
+          "type": "string",
+          "pattern": "^user_[A-Za-z0-9]+$",
+          "max_length": 255,
+          "required": true
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "assistant"
+          ],
+          "required": true
+        },
+        "effective_from": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        },
+        "effective_until": {
+          "type": "string",
+          "format": "date",
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "TeacherAssignmentCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_teacher_assignments",
+    "title": "List teacher assignments",
+    "method": "GET",
+    "path": "/classrooms/{classroom_id}/teacher-assignments/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "end_teacher_assignment",
+    "title": "End teacher assignment",
+    "method": "POST",
+    "path": "/teacher-assignments/{assignment_id}/end/",
+    "module": "classrooms",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "assignment_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "effective_until": {
+          "type": "string",
+          "format": "date",
+          "required": true
+        }
+      },
+      "name": "TeacherAssignmentEndRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "create_enrollment",
+    "title": "Create enrollment",
+    "method": "POST",
+    "path": "/students/{student_id}/enrollments/",
+    "module": "enrollments",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "academic_year_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        }
+      },
+      "name": "EnrollmentCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_student_enrollments",
+    "title": "List student enrollments",
+    "method": "GET",
+    "path": "/students/{student_id}/enrollments/",
+    "module": "enrollments",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_enrollment",
+    "title": "Get enrollment",
+    "method": "GET",
+    "path": "/enrollments/{enrollment_id}/",
+    "module": "enrollments",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "enrollment_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "delete_enrollment",
+    "title": "Delete enrollment",
+    "method": "DELETE",
+    "path": "/enrollments/{enrollment_id}/",
+    "module": "enrollments",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "enrollment_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_guardian_school_policies",
+    "title": "List guardian school policies",
+    "method": "GET",
+    "path": "/guardian/family/policies/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "download_guardian_school_policy",
+    "title": "Download guardian school policy",
+    "method": "GET",
+    "path": "/guardian/family/policies/{document_id}/pdf/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "document_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "family_overview",
+    "title": "Family overview",
+    "method": "GET",
+    "path": "/guardian/family/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "family_student_feed",
+    "title": "Family student feed",
+    "method": "GET",
+    "path": "/guardian/family/students/{student_id}/feed/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 30
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      },
+      {
+        "type": "boolean",
+        "name": "unread_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_family_weekly_explanation",
+    "title": "Create family weekly explanation",
+    "method": "POST",
+    "path": "/guardian/family/students/{student_id}/weekly-explanation/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "output_language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "fr",
+            "ar"
+          ],
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "GuardianWeeklyExplanationRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "family_update_detail",
+    "title": "Family update detail",
+    "method": "GET",
+    "path": "/guardian/family/students/{student_id}/updates/{recipient_id}/",
+    "module": "guardian_family",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_invitation",
+    "title": "Create invitation",
+    "method": "POST",
+    "path": "/invitations/",
+    "module": "invitations",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "required": true
+        },
+        "first_name": {
+          "type": "string",
+          "nullable": true,
+          "required": false
+        },
+        "last_name": {
+          "type": "string",
+          "nullable": true,
+          "required": false
+        },
+        "role_slug": {
+          "type": "string",
+          "enum": [
+            "school_admin",
+            "teacher",
+            "guardian"
+          ],
+          "required": false,
+          "default": "guardian"
+        }
+      },
+      "name": "InvitationCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "upload_invitations",
+    "title": "Upload invitations",
+    "method": "POST",
+    "path": "/invitations/upload/",
+    "module": "invitations",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": true
+  },
+  {
+    "id": "get_invitations",
+    "title": "Get invitations",
+    "method": "GET",
+    "path": "/invitations/",
+    "module": "invitations",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_invitation_status",
+    "title": "Get invitation status",
+    "method": "GET",
+    "path": "/invitations/{invitation_id}/",
+    "module": "invitations",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "invitation_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "retry_invitation",
+    "title": "Retry invitation",
+    "method": "POST",
+    "path": "/invitations/{invitation_id}/retry/",
+    "module": "invitations",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "invitation_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_school_members",
+    "title": "Get school members",
+    "method": "GET",
+    "path": "/members/",
+    "module": "members",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_member_summary",
+    "title": "Get member summary",
+    "method": "GET",
+    "path": "/members/{user_id}/",
+    "module": "members",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "pattern": "^user_[A-Za-z0-9]+$",
+        "max_length": 255,
+        "name": "user_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_needs_review",
+    "title": "Get needs review",
+    "method": "GET",
+    "path": "/needs-review/",
+    "module": "needs_review",
+    "role": "admin",
+    "params": [
+      {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "registration",
+            "invitation",
+            "missing_attendance",
+            "missing_assignment",
+            "acknowledgement"
+          ]
+        },
+        "nullable": true,
+        "name": "category",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "warning",
+            "urgent"
+          ]
+        },
+        "nullable": true,
+        "name": "severity",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "date_from",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "date_to",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 50
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_school_policies",
+    "title": "Get school policies",
+    "method": "GET",
+    "path": "/school-policies",
+    "module": "reminders",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_school_policy",
+    "title": "Create school policy",
+    "method": "POST",
+    "path": "/school-policies",
+    "module": "reminders",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "text": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "name": "SchoolPolicyCreate"
+    },
+    "upload": false
+  },
+  {
+    "id": "upload_school_policy_pdf",
+    "title": "Upload school policy pdf",
+    "method": "POST",
+    "path": "/school-policies/pdf",
+    "module": "reminders",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": true
+  },
+  {
+    "id": "download_school_policy",
+    "title": "Download school policy",
+    "method": "GET",
+    "path": "/school-policies/{document_id}/pdf",
+    "module": "reminders",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "document_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "delete_school_policy",
+    "title": "Delete school policy",
+    "method": "DELETE",
+    "path": "/school-policies/{document_id}",
+    "module": "reminders",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "document_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_reminder",
+    "title": "Get reminder",
+    "method": "GET",
+    "path": "/student-updates/{update_id}/reminder",
+    "module": "reminders",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_reminder",
+    "title": "Create reminder",
+    "method": "POST",
+    "path": "/student-updates/{update_id}/reminder",
+    "module": "reminders",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "ReminderPreparation"
+    },
+    "upload": false
+  },
+  {
+    "id": "approve_reminder_proposal",
+    "title": "Approve reminder proposal",
+    "method": "POST",
+    "path": "/reminder-proposals/{proposal_id}/approve",
+    "module": "reminders",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "proposal_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "required": true
+        },
+        "include_policy_sources": {
+          "type": "boolean",
+          "required": false,
+          "default": true
+        }
+      },
+      "name": "ReminderApproval"
+    },
+    "upload": false
+  },
+  {
+    "id": "get_school_attendance_settings",
+    "title": "Get school attendance settings",
+    "method": "GET",
+    "path": "/school/attendance-settings",
+    "module": "schools",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "replace_school_attendance_settings",
+    "title": "Replace school attendance settings",
+    "method": "PUT",
+    "path": "/school/attendance-settings",
+    "module": "schools",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "timezone": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 64,
+          "required": true
+        },
+        "instructional_weekdays": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "required": true,
+          "min_length": 1,
+          "max_length": 7
+        },
+        "attendance_cutoff_time": {
+          "type": "string",
+          "format": "time",
+          "required": false
+        }
+      },
+      "name": "SchoolAttendanceSettingsRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "get_school_ai_settings",
+    "title": "Get school ai settings",
+    "method": "GET",
+    "path": "/school/ai-settings",
+    "module": "schools",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "replace_school_ai_settings",
+    "title": "Replace school ai settings",
+    "method": "PUT",
+    "path": "/school/ai-settings",
+    "module": "schools",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "ai_teacher_draft_enabled": {
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "ai_teacher_draft_default_language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "fr",
+            "ar"
+          ],
+          "required": false,
+          "default": "auto"
+        },
+        "ai_guardian_weekly_explanation_enabled": {
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "ai_guardian_weekly_explanation_default_language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "fr",
+            "ar"
+          ],
+          "required": false,
+          "default": "auto"
+        }
+      },
+      "name": "SchoolAISettingsRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "create_student",
+    "title": "Create student",
+    "method": "POST",
+    "path": "/students/",
+    "module": "students",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "last_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        }
+      },
+      "name": "StudentCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_students",
+    "title": "List students",
+    "method": "GET",
+    "path": "/students/",
+    "module": "students",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_student",
+    "title": "Get student",
+    "method": "GET",
+    "path": "/students/{student_id}/",
+    "module": "students",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "update_student",
+    "title": "Update student",
+    "method": "PATCH",
+    "path": "/students/{student_id}/",
+    "module": "students",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "nullable": true,
+          "required": false
+        },
+        "last_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "StudentUpdateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "add_guardian",
+    "title": "Add guardian",
+    "method": "POST",
+    "path": "/students/{student_id}/guardians/",
+    "module": "students",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "guardian_workos_user_id": {
+          "type": "string",
+          "pattern": "^user_[A-Za-z0-9]+$",
+          "max_length": 255,
+          "required": true
+        }
+      },
+      "name": "GuardianCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_guardians",
+    "title": "List guardians",
+    "method": "GET",
+    "path": "/students/{student_id}/guardians/",
+    "module": "students",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "remove_guardian",
+    "title": "Remove guardian",
+    "method": "DELETE",
+    "path": "/students/{student_id}/guardians/{guardian_id}/",
+    "module": "students",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "guardian_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_guardian_academic_years",
+    "title": "List guardian academic years",
+    "method": "GET",
+    "path": "/guardian/academic-years/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_guardian_students",
+    "title": "List guardian students",
+    "method": "GET",
+    "path": "/guardian/students/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_guardian_student",
+    "title": "Get guardian student",
+    "method": "GET",
+    "path": "/guardian/students/{student_id}/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_guardian_registration_request",
+    "title": "Create guardian registration request",
+    "method": "POST",
+    "path": "/guardian/registration-requests/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "child_first_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "child_last_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "academic_year_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        }
+      },
+      "name": "StudentRegistrationRequestCreate"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_guardian_registration_requests",
+    "title": "List guardian registration requests",
+    "method": "GET",
+    "path": "/guardian/registration-requests/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "edit_guardian_registration_request",
+    "title": "Edit guardian registration request",
+    "method": "PUT",
+    "path": "/guardian/registration-requests/{request_id}/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "child_first_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "nullable": true,
+          "required": false
+        },
+        "child_last_name": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "nullable": true,
+          "required": false
+        },
+        "academic_year_id": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "StudentRegistrationRequestUpdate"
+    },
+    "upload": false
+  },
+  {
+    "id": "withdraw_guardian_registration_request",
+    "title": "Withdraw guardian registration request",
+    "method": "POST",
+    "path": "/guardian/registration-requests/{request_id}/withdraw/",
+    "module": "student_registration",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_school_registration_requests",
+    "title": "List school registration requests",
+    "method": "GET",
+    "path": "/registration-requests/",
+    "module": "student_registration",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "withdrawn"
+        ],
+        "nullable": true,
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "approve_school_registration_request",
+    "title": "Approve school registration request",
+    "method": "POST",
+    "path": "/registration-requests/{request_id}/approve/",
+    "module": "student_registration",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "type": "string",
+              "enum": [
+                "existing"
+              ],
+              "required": true
+            },
+            "student_id": {
+              "type": "string",
+              "format": "uuid",
+              "required": true
+            }
+          },
+          "name": "ApproveWithExistingStudent"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "type": "string",
+              "enum": [
+                "create"
+              ],
+              "required": true
+            }
+          },
+          "name": "ApproveWithNewStudent"
+        }
+      ],
+      "discriminator": "resolution"
+    },
+    "upload": false
+  },
+  {
+    "id": "reject_school_registration_request",
+    "title": "Reject school registration request",
+    "method": "POST",
+    "path": "/registration-requests/{request_id}/reject/",
+    "module": "student_registration",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 500,
+          "required": true
+        }
+      },
+      "name": "StudentRegistrationRejection"
+    },
+    "upload": false
+  },
+  {
+    "id": "get_summary",
+    "title": "Get summary",
+    "method": "GET",
+    "path": "/student-updates/summary/",
+    "module": "student_updates",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_updates",
+    "title": "List updates",
+    "method": "GET",
+    "path": "/student-updates/",
+    "module": "student_updates",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "nullable": true,
+        "name": "classroom_id",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "nullable": true,
+        "name": "teacher_id",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "nullable": true,
+        "name": "student_id",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "assigned",
+          "acknowledged",
+          "completed"
+        ],
+        "nullable": true,
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "boolean",
+        "name": "overdue_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 100
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_update",
+    "title": "Get update",
+    "method": "GET",
+    "path": "/student-updates/{update_id}/",
+    "module": "student_updates",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_recipient_events",
+    "title": "List recipient events",
+    "method": "GET",
+    "path": "/student-updates/recipients/{recipient_id}/history/",
+    "module": "student_updates",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_feed",
+    "title": "List feed",
+    "method": "GET",
+    "path": "/guardian/feed/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "assigned",
+          "acknowledged",
+          "completed"
+        ],
+        "nullable": true,
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "boolean",
+        "name": "unread_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "boolean",
+        "name": "overdue_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 50
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_student_feed",
+    "title": "List student feed",
+    "method": "GET",
+    "path": "/guardian/students/{student_id}/feed/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "assigned",
+          "acknowledged",
+          "completed"
+        ],
+        "nullable": true,
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "boolean",
+        "name": "unread_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "boolean",
+        "name": "overdue_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 50
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_update",
+    "title": "Get update",
+    "method": "GET",
+    "path": "/guardian/updates/{recipient_id}/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "mark_update_read",
+    "title": "Mark update read",
+    "method": "POST",
+    "path": "/guardian/updates/{recipient_id}/read/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "acknowledge_update",
+    "title": "Acknowledge update",
+    "method": "POST",
+    "path": "/guardian/updates/{recipient_id}/acknowledge/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "reply_to_update",
+    "title": "Reply to update",
+    "method": "POST",
+    "path": "/guardian/updates/{recipient_id}/replies/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 5000,
+          "required": true
+        }
+      },
+      "name": "StudentUpdateMessageRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_notifications",
+    "title": "List notifications",
+    "method": "GET",
+    "path": "/guardian/notifications/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "boolean",
+        "name": "unread_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 50
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "mark_notification_read",
+    "title": "Mark notification read",
+    "method": "POST",
+    "path": "/guardian/notifications/{notification_id}/read/",
+    "module": "student_updates",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "notification_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "preview_update_audience",
+    "title": "Preview update audience",
+    "method": "POST",
+    "path": "/teacher/updates/preview/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "classroom_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "classroom"
+                  ],
+                  "required": true
+                }
+              },
+              "name": "ClassroomTarget"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "students"
+                  ],
+                  "required": true
+                },
+                "student_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "required": true,
+                  "min_length": 1,
+                  "max_length": 500
+                }
+              },
+              "name": "StudentsTarget"
+            }
+          ],
+          "discriminator": "type",
+          "required": true
+        }
+      },
+      "name": "StudentUpdateAudiencePreviewRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "create_update",
+    "title": "Create update",
+    "method": "POST",
+    "path": "/teacher/updates/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "classroom_id": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "body": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 5000,
+          "nullable": true,
+          "required": false
+        },
+        "due_at": {
+          "type": "string",
+          "format": "date-time",
+          "nullable": true,
+          "required": false
+        },
+        "requires_acknowledgement": {
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "allows_replies": {
+          "type": "boolean",
+          "required": false,
+          "default": true
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "classroom"
+                  ],
+                  "required": true
+                }
+              },
+              "name": "ClassroomTarget"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "students"
+                  ],
+                  "required": true
+                },
+                "student_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "required": true,
+                  "min_length": 1,
+                  "max_length": 500
+                }
+              },
+              "name": "StudentsTarget"
+            }
+          ],
+          "discriminator": "type",
+          "required": true
+        }
+      },
+      "name": "StudentUpdateCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_updates",
+    "title": "List updates",
+    "method": "GET",
+    "path": "/teacher/updates/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "nullable": true,
+        "name": "classroom_id",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "assigned",
+          "acknowledged",
+          "completed"
+        ],
+        "nullable": true,
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "boolean",
+        "name": "overdue_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 50
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_update",
+    "title": "Get update",
+    "method": "GET",
+    "path": "/teacher/updates/{update_id}/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "add_feedback",
+    "title": "Add feedback",
+    "method": "POST",
+    "path": "/teacher/updates/{update_id}/recipients/{recipient_id}/feedback/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 5000,
+          "required": true
+        }
+      },
+      "name": "StudentUpdateMessageRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "set_recipient_status",
+    "title": "Set recipient status",
+    "method": "PATCH",
+    "path": "/teacher/updates/{update_id}/recipients/{recipient_id}/status/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assigned",
+            "acknowledged",
+            "completed"
+          ],
+          "required": true
+        }
+      },
+      "name": "StudentUpdateStatusRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_recipient_events",
+    "title": "List recipient events",
+    "method": "GET",
+    "path": "/teacher/updates/{update_id}/recipients/{recipient_id}/history/",
+    "module": "student_updates",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "update_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "recipient_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_teacher_today_workspace",
+    "title": "Get teacher today workspace",
+    "method": "GET",
+    "path": "/teacher/today",
+    "module": "teachers",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "date",
+        "nullable": true,
+        "name": "date",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_teacher_classrooms",
+    "title": "List teacher classrooms",
+    "method": "GET",
+    "path": "/teacher/classrooms/",
+    "module": "teachers",
+    "role": "teacher",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_teacher_classroom",
+    "title": "Get teacher classroom",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/",
+    "module": "teachers",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_teacher_classroom_students",
+    "title": "List teacher classroom students",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/students/",
+    "module": "teachers",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "nullable": true,
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_teacher_classroom_calendar",
+    "title": "Get teacher classroom calendar",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/calendar/",
+    "module": "teachers",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_guardian_tutor_books",
+    "title": "List guardian tutor books",
+    "method": "GET",
+    "path": "/guardian/tutor/books/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "open_guardian_tutor_book",
+    "title": "Open guardian tutor book",
+    "method": "GET",
+    "path": "/guardian/tutor/books/{book_id}/pdf/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "book_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_guardian_study_activity",
+    "title": "Create guardian study activity",
+    "method": "POST",
+    "path": "/guardian/tutor/books/{book_id}/study/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "book_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "search",
+            "explain",
+            "summary",
+            "quiz",
+            "practice"
+          ],
+          "required": true
+        },
+        "topic": {
+          "type": "string",
+          "max_length": 500,
+          "required": false,
+          "default": ""
+        },
+        "start_page": {
+          "type": "integer",
+          "nullable": true,
+          "required": false,
+          "ge": 1
+        },
+        "end_page": {
+          "type": "integer",
+          "nullable": true,
+          "required": false,
+          "ge": 1
+        }
+      },
+      "name": "StudyRequest"
+    },
+    "upload": false
+  }
+]

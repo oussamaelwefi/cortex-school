@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build:
+      context: ../../../cortex-school-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_WORKOS_CLIENT_ID: ${VITE_WORKOS_CLIENT_ID:-client_01KT21GY6QP06ZC02SWM7JKX20}
+        VITE_WORKOS_REDIRECT_URI: ${VITE_WORKOS_REDIRECT_URI:-http://localhost:5173}
+    ports:
+      - "${FRONTEND_PORT:-5173}:8080"
+    environment:
+      BACKEND_ORIGIN: http://api:9000
+    depends_on:
+      - api
+    restart: unless-stopped

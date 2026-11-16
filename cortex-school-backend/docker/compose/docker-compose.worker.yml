@@ -1,0 +1,48 @@
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis-data:/data
+
+  worker:
+    build:
+      context: "../.."
+      dockerfile: app/Dockerfile
+    restart: always
+    command: celery -A core.celery_app:celery_app worker --loglevel=INFO
+    volumes:
+      - ./../../app:/app
+    env_file:
+      - ./../.env
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: "../.."
+      dockerfile: app/Dockerfile
+    restart: always
+    command: celery -A core.celery_app:celery_app beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+    volumes:
+      - ./../../app:/app
+    env_file:
+      - ./../.env
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis-data:

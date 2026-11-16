@@ -1,0 +1,5 @@
+# The frontend joins the application's existing Docker Compose project.
+name: docker
+include:
+  - path: ../cortex-school-backend/docker/docker-compose.yml
+    env_file: ../cortex-school-backend/docker/.env

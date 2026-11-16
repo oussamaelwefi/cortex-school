@@ -1,0 +1,11 @@
+name: docker
+
+include:
+  - path: ./compose/docker-compose.api.yml
+  - path: ./compose/docker-compose.db.yml
+  - path: ./compose/docker-compose.worker.yml
+  - path: ./compose/docker-compose.frontend.yml
+
+networks:
+  default:
+    driver: bridge

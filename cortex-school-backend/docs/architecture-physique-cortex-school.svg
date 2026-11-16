@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">Architecture physique de Cortex School</title>
+  <desc id="desc">Schéma de déploiement Docker incluant le client, FastAPI, PostgreSQL, Redis, Celery, WorkOS et OpenRouter.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#506176"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#24364b" flood-opacity="0.15"/>
+    </filter>
+    <style>
+      .title { font: 700 38px Arial, sans-serif; fill: #102a43; }
+      .subtitle { font: 400 19px Arial, sans-serif; fill: #486581; }
+      .group { font: 700 22px Arial, sans-serif; fill: #243b53; }
+      .label { font: 700 22px Arial, sans-serif; fill: #102a43; }
+      .detail { font: 400 16px Arial, sans-serif; fill: #486581; }
+      .small { font: 600 14px Arial, sans-serif; fill: #334e68; }
+      .arrowLabel { font: 600 14px Arial, sans-serif; fill: #334e68; }
+      .node { stroke-width: 2; filter: url(#shadow); }
+      .line { fill: none; stroke: #506176; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="980" fill="#f6f9fc"/>
+  <text x="800" y="64" text-anchor="middle" class="title">Architecture physique — Cortex School</text>
+  <text x="800" y="96" text-anchor="middle" class="subtitle">Déploiement conteneurisé et intégrations externes</text>
+
+  <!-- Sections -->
+  <rect x="65" y="155" width="280" height="650" rx="20" fill="#edf6ff" stroke="#9ac8f0" stroke-width="2"/>
+  <text x="205" y="198" text-anchor="middle" class="group">Clients</text>
+
+  <rect x="400" y="135" width="750" height="720" rx="22" fill="#ffffff" stroke="#526cfe" stroke-width="3" stroke-dasharray="9 7"/>
+  <text x="440" y="179" class="group">Hôte Docker / réseau privé</text>
+
+  <rect x="1210" y="155" width="325" height="650" rx="20" fill="#f5f1ff" stroke="#b7a0ed" stroke-width="2"/>
+  <text x="1372" y="198" text-anchor="middle" class="group">Services externes</text>
+
+  <!-- Client -->
+  <rect x="105" y="300" width="200" height="132" rx="16" fill="#ffffff" stroke="#2f80c9" class="node"/>
+  <rect x="170" y="322" width="70" height="47" rx="5" fill="#d8ecff" stroke="#2f80c9" stroke-width="2"/>
+  <path d="M153 382 h104 M185 401 h40" stroke="#2f80c9" stroke-width="4" stroke-linecap="round"/>
+  <text x="205" y="468" text-anchor="middle" class="label">Navigateur</text>
+  <text x="205" y="493" text-anchor="middle" class="detail">Frontend web</text>
+
+  <!-- API -->
+  <rect x="475" y="260" width="270" height="170" rx="18" fill="#e8f8f3" stroke="#25a67b" class="node"/>
+  <rect x="505" y="288" width="56" height="56" rx="12" fill="#b9ead8"/>
+  <path d="M522 306 h22 M522 320 h22 M522 334 h22" stroke="#13795b" stroke-width="4" stroke-linecap="round"/>
+  <text x="585" y="320" class="label">API FastAPI</text>
+  <text x="585" y="348" class="detail">REST · Auth · Métier</text>
+  <text x="585" y="378" class="small">Conteneur api · port 9000</text>
+
+  <!-- Worker -->
+  <rect x="805" y="260" width="270" height="170" rx="18" fill="#fff7e6" stroke="#e6a23c" class="node"/>
+  <circle cx="842" cy="316" r="29" fill="#ffe1a8"/>
+  <path d="M829 316 h26 M842 303 v26" stroke="#aa6500" stroke-width="4" stroke-linecap="round"/>
+  <text x="890" y="320" class="label">Celery Worker</text>
+  <text x="890" y="348" class="detail">Tâches asynchrones</text>
+  <text x="890" y="378" class="small">Invitations et traitements</text>
+
+  <!-- DB -->
+  <rect x="475" y="585" width="270" height="170" rx="18" fill="#edf0ff" stroke="#6574cd" class="node"/>
+  <ellipse cx="530" cy="620" rx="31" ry="13" fill="#cfd7ff" stroke="#6574cd" stroke-width="2"/>
+  <path d="M499 620 v55 c0 18 62 18 62 0 v-55 M499 647 c0 18 62 18 62 0" fill="#cfd7ff" stroke="#6574cd" stroke-width="2"/>
+  <text x="585" y="650" class="label">PostgreSQL</text>
+  <text x="585" y="678" class="detail">Données persistantes</text>
+  <text x="585" y="708" class="small">Conteneur db · port 5432</text>
+
+  <!-- Redis -->
+  <rect x="805" y="585" width="270" height="170" rx="18" fill="#fff0f0" stroke="#d95d5d" class="node"/>
+  <path d="M825 615 h52 l12 18 -12 18 h-52 l-12-18 z" fill="#ffd0d0" stroke="#d95d5d" stroke-width="2"/>
+  <path d="M825 665 h52 l12 18 -12 18 h-52 l-12-18 z" fill="#ffd0d0" stroke="#d95d5d" stroke-width="2"/>
+  <text x="900" y="650" class="label">Redis</text>
+  <text x="900" y="678" class="detail">Broker + rate limiting</text>
+  <text x="900" y="708" class="small">Conteneur redis · port 6379</text>
+
+  <!-- WorkOS -->
+  <rect x="1260" y="280" width="225" height="160" rx="18" fill="#ffffff" stroke="#8c6bd1" class="node"/>
+  <circle cx="1305" cy="335" r="27" fill="#e6ddff"/>
+  <path d="M1293 337 q12-18 24 0 v16 h-24z" fill="none" stroke="#7652be" stroke-width="3"/>
+  <circle cx="1305" cy="326" r="7" fill="#7652be"/>
+  <text x="1365" y="334" class="label">WorkOS</text>
+  <text x="1365" y="363" class="detail">Authentification</text>
+  <text x="1365" y="392" class="small">API HTTPS</text>
+
+  <!-- OpenRouter -->
+  <rect x="1260" y="570" width="225" height="160" rx="18" fill="#ffffff" stroke="#8c6bd1" class="node"/>
+  <path d="M1280 615 l27-18 27 18 v34 l-27 18 -27-18z" fill="#e6ddff" stroke="#7652be" stroke-width="2"/>
+  <path d="M1295 632 h24 M1307 620 v24" stroke="#7652be" stroke-width="3" stroke-linecap="round"/>
+  <text x="1365" y="624" class="label">OpenRouter</text>
+  <text x="1365" y="653" class="detail">Modèle IA</text>
+  <text x="1365" y="682" class="small">API HTTPS</text>
+
+  <!-- Connections -->
+  <path d="M305 366 H475" class="line"/>
+  <text x="390" y="347" text-anchor="middle" class="arrowLabel">HTTP / JSON</text>
+  <text x="390" y="384" text-anchor="middle" class="arrowLabel">HTTPS en production</text>
+
+  <path d="M610 430 V585" class="line"/>
+  <text x="620" y="520" class="arrowLabel">SQL</text>
+
+  <path d="M745 345 H805" class="line"/>
+  <text x="775" y="327" text-anchor="middle" class="arrowLabel">Tâches</text>
+
+  <path d="M940 430 V585" class="line"/>
+  <text x="950" y="520" class="arrowLabel">Broker</text>
+
+  <path d="M805 675 H745" class="line"/>
+  <text x="775" y="660" text-anchor="middle" class="arrowLabel">Cache</text>
+
+  <path d="M805 400 C760 480 720 515 655 585" class="line"/>
+  <text x="715" y="482" class="arrowLabel">Accès DB</text>
+
+  <path d="M610 260 V225 H1260" class="line"/>
+  <text x="970" y="214" text-anchor="middle" class="arrowLabel">Validation JWT · HTTPS</text>
+
+  <path d="M745 400 C940 505 1060 640 1260 640" class="line"/>
+  <text x="1030" y="575" text-anchor="middle" class="arrowLabel">Prompts contrôlés · HTTPS</text>
+
+  <!-- Footer -->
+  <rect x="180" y="890" width="1240" height="54" rx="12" fill="#e9f1f8"/>
+  <text x="800" y="923" text-anchor="middle" class="detail">Les données métier restent dans PostgreSQL ; seules les informations minimales et autorisées sont envoyées au service IA.</text>
+</svg>
