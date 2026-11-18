@@ -1,0 +1,97 @@
+# Image-based local runtime for this checkout, reusing the existing school data.
+# Rebuild after source changes; Docker Desktop cannot bind-mount this F: drive.
+name: docker
+
+x-backend: &backend
+  build:
+    context: ..
+    dockerfile: app/Dockerfile
+  env_file: .env
+  environment:
+    ENVIRONMENT: ${ENVIRONMENT:-development}
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *backend
+    command: uvicorn main:app --host 0.0.0.0 --port 9000
+    ports:
+      - "9000:9000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    <<: *backend
+    command: celery -A core.celery_app:celery_app worker --loglevel=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    <<: *backend
+    command: celery -A core.celery_app:celery_app beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../../cortex-school-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_WORKOS_CLIENT_ID: ${VITE_WORKOS_CLIENT_ID:-client_01KT21GY6QP06ZC02SWM7JKX20}
+        VITE_WORKOS_REDIRECT_URI: ${VITE_WORKOS_REDIRECT_URI:-http://localhost:5173}
+    environment:
+      BACKEND_ORIGIN: http://api:9000
+    ports:
+      - "${FRONTEND_PORT:-5173}:8080"
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  db:
+    image: postgres:16.8
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
+    external: true
+    name: docker_db-data
+  redis-data:
+    external: true
+    name: docker_redis-data
+
+networks:
+  default:
+    external: true
+    name: docker_default

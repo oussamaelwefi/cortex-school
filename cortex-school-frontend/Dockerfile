@@ -16,7 +16,8 @@ ENV VITE_WORKOS_DEV_MODE=${VITE_WORKOS_DEV_MODE}
 RUN npm run build
 
 FROM nginx:stable-alpine AS runtime
-ENV BACKEND_ORIGIN=http://host.docker.internal:9000
+ENV BACKEND_ORIGIN=http://host.docker.internal:9000 \
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080

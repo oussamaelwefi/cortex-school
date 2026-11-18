@@ -57,15 +57,22 @@ pages and controls their language independently.
 - Guardian: family overview; child records; family feeds and update details; weekly explanations; attendance history; registration creation, editing, and withdrawal; update read/acknowledgement/reply; notifications and mark-read.
 - Shared: responsive navigation, search, query filters, CSV export, nested record details, contextual actions, validation errors, loading/empty/error states, modal keyboard navigation, and destructive-action confirmation.
 
+The administrator’s **Needs review** page has a dedicated queue with school-wide
+open, urgent, and follow-up counts; category filters; priority and date filters;
+and pagination. Each issue keeps its context, deadline, and next action together.
+**Search this page** searches the currently displayed items. Registration,
+invitation, and attendance details open directly from their queue items;
+acknowledgements link to the reminder review.
+
 Open a record to see related actions with its identifiers prefilled. Each feature's **All workflows** panel exposes its remaining backend operations as typed forms. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
 
 Invitation import accepts UTF-8 **CSV**, with columns `email,first_name,last_name,role_slug`; valid roles are `school_admin`, `teacher`, and `guardian`.
 
 Administrators can upload a PDF from **School settings → School policies**. Choose a PDF with selectable text, up to 10 MB and 100 pages. The policy library uses the filename as its title and indexes extracted text with page references. Use **Paste text** to add policy text directly.
 
-Guardians can download their school’s uploaded PDFs from **School policies** in the family workspace. Re-upload an older PDF with the same filename to make its original available. When its extracted passages match, the app reuses the indexed policy and its existing citations.
+Guardians can read their school’s uploaded PDFs online from **School policies** in the family workspace and from policy sources in reminders. **View document** opens an authenticated preview inside the page; opening a new tab or saving a copy is optional. Re-upload an older PDF with the same filename to make its original available. When its extracted passages match, the app reuses the indexed policy and its existing citations.
 
-Administrators can download or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
+Administrators can preview, download, or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
 
 ## API contract maintenance
 

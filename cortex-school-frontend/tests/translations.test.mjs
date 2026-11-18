@@ -37,3 +37,11 @@ test("English and unrecognized record content remain unchanged", () => {
   assert.equal(tr("Amira Ben Ali"), "Amira Ben Ali");
   assert.equal(tr("student-123"), "student-123");
 });
+
+test("review queue messages translate while preserving names and identifiers", () => {
+  assert.equal(tr("Acknowledgement overdue for 6A"), "Accusé de réception en retard pour 6A");
+  assert.equal(tr("6B attendance is missing"), "Présence non transmise pour 6B");
+  assert.equal(tr("Registration request for Yasmine Ben Ali"), "Demande d’inscription pour Yasmine Ben Ali");
+  assert.equal(tr("Invitation for teacher@example.test"), "Invitation pour teacher@example.test");
+  assert.equal(tr("4 guardian acknowledgements remain outstanding."), "4 accusés de réception en attente.");
+});

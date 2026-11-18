@@ -4,6 +4,7 @@ from io import BytesIO
 import httpx
 import pytest
 from fastapi import HTTPException
+from langchain_core.messages import AIMessage
 from pypdf import PdfWriter
 
 from ai.llm import LLMNotConfiguredError
@@ -28,7 +29,7 @@ class StudyModel:
         if prompt["topic"] == "invalid مساحة":
             citation = 999
         if self.schema is LessonDraft:
-            return LessonDraft(
+            draft = LessonDraft(
                 title="مساحة المثلث",
                 takeaway="مساحة المثلث نصف حاصل ضرب القاعدة في الارتفاع.",
                 sections=[LessonSectionDraft(
@@ -36,15 +37,19 @@ class StudyModel:
                     calculation="6 × 4 ÷ 2 = 12", source_keys=[citation],
                 )],
             )
-        quiz = "four distinct options" in messages[0].content
-        return QuestionsDraft(questions=[
-            QuestionDraft(
-                prompt=f"احسب مساحة المثلث رقم {index}.",
-                options=["12", "6", "3", "4"] if quiz else [],
-                answer="6", correct_option=2 if quiz else None,
-                explanation="اضرب ثم اقسم على اثنين.", source_keys=[citation],
-            ) for index in range(1, 4)
-        ])
+        else:
+            quiz = "four distinct options" in messages[0].content
+            draft = QuestionsDraft(questions=[
+                QuestionDraft(
+                    prompt=f"احسب مساحة المثلث رقم {index}.",
+                    options=["12", "6", "3", "4"] if quiz else [],
+                    answer="6", correct_option=2 if quiz else None,
+                    explanation="اضرب ثم اقسم على اثنين.", source_keys=[citation],
+                ) for index in range(1, 4)
+            ])
+        if "Return only a JSON object" in messages[0].content:
+            return AIMessage(content=draft.model_dump_json())
+        return draft
 
 
 @pytest.mark.asyncio

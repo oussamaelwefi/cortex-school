@@ -214,7 +214,7 @@ export const pages: Record<Role, Page[]> = {
     {
       key: "school-policies",
       title: "School policies",
-      description: "Download policy PDFs shared by your school.",
+      description: "Read policy documents shared by your school online.",
       path: "/guardian/family/policies/",
       module: "guardian_family",
     },

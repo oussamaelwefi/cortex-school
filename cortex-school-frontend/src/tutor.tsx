@@ -6,6 +6,7 @@ import { Heading } from "./pages";
 import { pageLabel, SourceExcerpt, StudyResult, type Action, type Activity, type PageSource } from "./tutor-results";
 import { Empty, ErrorBox, Loading, Modal, useRemote } from "./ui";
 import "./tutor.css";
+import "katex/dist/katex.min.css";
 
 type Book = { id: string; title: string; page_count: number; indexed_page_count: number };
 
@@ -61,6 +62,7 @@ function StudyWorkspace({ book }: { book: Book }) {
   const [result, setResult] = useState<Activity | null>(null);
   const [error, setError] = useState("");
   const [source, setSource] = useState<PageSource | null>(null);
+  const [lastRequest, setLastRequest] = useState<{ action: Action; topic: string; start_page: number | null; end_page: number | null } | null>(null);
   const resultAnchor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,16 +85,17 @@ function StudyWorkspace({ book }: { book: Book }) {
       setError(t("Choose a range of up to six pages."));
       return;
     }
+    await runStudy({ action, topic: topic.trim(), start_page: start ? Number(start) : null, end_page: end ? Number(end) : null });
+  }
+
+  async function runStudy(request: NonNullable<typeof lastRequest>) {
+    if (pending) return;
     setError("");
     setResult(null);
-    setPending(action);
+    setPending(request.action);
+    setLastRequest(request);
     try {
-      setResult(await api(studyEndpoint, { book_id: book.id }, {
-        action,
-        topic: topic.trim(),
-        start_page: start ? Number(start) : null,
-        end_page: end ? Number(end) : null,
-      }));
+      setResult(await api(studyEndpoint, { book_id: book.id }, request));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -140,11 +143,11 @@ function StudyWorkspace({ book }: { book: Book }) {
           ))}
         </div>
         {error && <ErrorBox error={error} />}
-        {pending && <p className="tutor-progress" role="status">{t("Searching the selected book…")}</p>}
+        {pending && <p className="tutor-progress" role="status">{t(pending === "search" ? "Searching the selected book…" : "Preparing your study activity…")}</p>}
       </form>
       {result && (
         <div ref={resultAnchor} className="tutor-result-anchor" tabIndex={-1}>
-          <StudyResult activity={result} onOpenPage={setSource} />
+          <StudyResult activity={result} onOpenPage={setSource} onRetry={lastRequest ? () => { void runStudy(lastRequest); } : undefined} />
         </div>
       )}
       {source && <BookViewer book={book} source={source} onClose={() => setSource(null)} />}

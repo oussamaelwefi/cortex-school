@@ -4,6 +4,13 @@ export function translate(value, language, dictionary) {
   if (dictionary[trimmed]) return value.replace(trimmed, dictionary[trimmed]);
   const tr = (text) => translate(text, language, dictionary);
   const patterns = [
+    [/^Acknowledgement overdue for (.+)$/, (m) => `Accusé de réception en retard pour ${m[1]}`],
+    [/^(.+) attendance is missing$/, (m) => `Présence non transmise pour ${m[1]}`],
+    [/^(.+) needs a teacher assignment$/, (m) => `Un enseignant doit être affecté à ${m[1]}`],
+    [/^Registration request for (.+)$/, (m) => `Demande d’inscription pour ${m[1]}`],
+    [/^Invitation for (.+)$/, (m) => `Invitation pour ${m[1]}`],
+    [/^(\d+) guardian acknowledgements? remain outstanding\.$/, (m) => `${m[1]} accusé${m[1] === "1" ? "" : "s"} de réception en attente.`],
+    [/^No active teacher assignment owns attendance for (\d{4}-\d{2}-\d{2})\.$/, (m) => `Aucun enseignant actif n’est chargé de la présence pour le ${m[1]}.`],
     [/^Good to see you(.*)\.$/, (m) => `Heureux de vous retrouver${m[1]} !`],
     [
       /^(\d+) records shown$/,

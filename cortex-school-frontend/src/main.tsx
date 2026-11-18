@@ -64,7 +64,9 @@ import type { Choices } from "./forms";
 import { ReminderReviewPage } from "./reminders";
 import { SchoolAnalyticsPage } from "./analytics";
 import { GuardianTutorPage } from "./tutor";
+import { NeedsReviewPage } from "./needs-review";
 import "./styles.css";
+import "./needs-review.css";
 const roleNames = {
   admin: "School administrator",
   teacher: "Teacher",
@@ -578,7 +580,9 @@ function Shell({
                     key={page.key}
                     path={`/${page.key}`}
                     element={
-                      page.key === "analytics" ? (
+                      role === "admin" && page.key === "review" ? (
+                        <NeedsReviewPage />
+                      ) : page.key === "analytics" ? (
                         <SchoolAnalyticsPage />
                       ) : page.key === "tutor" ? (
                         <GuardianTutorPage />

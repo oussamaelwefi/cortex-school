@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 import unicodedata
 import uuid
@@ -7,7 +8,7 @@ import uuid
 from fastapi import HTTPException
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage, SystemMessage
-from openai import APIError
+from openai import APIError, BadRequestError
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,6 +30,7 @@ STOP_WORDS = {
 }
 PRINT_HEADER = re.compile(r"^(?:[\d\s/:-]+\s+)?page\s+\d+(?:\s+\d+)*$", re.IGNORECASE)
 DIRECTION_MARKS = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
+logger = logging.getLogger(__name__)
 
 
 def normalize_book_search(value: str) -> str:
@@ -139,11 +141,6 @@ particular clue to all rhombi or identify a numbered diagram whose labels were n
 async def draft_activity(request: StudyRequest, title: str, sources: list[TutorSource]) -> StudyResponse:
     sources_by_key = {key: source for key, source in enumerate(sources, 1)}
 
-    def resolve(keys: list[int]) -> list[uuid.UUID]:
-        if not keys or not set(keys) <= sources_by_key.keys():
-            raise ValueError("Invalid textbook citations")
-        return [sources_by_key[key].id for key in dict.fromkeys(keys)]
-
     task = {
         "book": title, "topic": request.topic or "Main concepts covered in the supplied pages",
         "sources": [
@@ -153,17 +150,49 @@ async def draft_activity(request: StudyRequest, title: str, sources: list[TutorS
     }
     model = get_chat_model().model_copy(update={"max_tokens": 2400})
     text_activity = request.action in {"explain", "summary"}
-    chain = model.with_structured_output(LessonDraft if text_activity else QuestionsDraft, method="function_calling")
+    schema = LessonDraft if text_activity else QuestionsDraft
     instructions = INSTRUCTIONS[request.action]
     geometry_text = normalize_book_search(" ".join([request.topic, *(source.excerpt for source in sources)]))
     if re.search(r"متوازي(?:ات)?\s+الاضلاع|\bparallelograms?\b", geometry_text):
         instructions += PARALLELOGRAM_CHECKS
+    messages = [
+        SystemMessage(content=f"{PROMPT}\n{instructions}"),
+        HumanMessage(content=json.dumps(task, ensure_ascii=False)),
+    ]
     async with asyncio.timeout(38):
-        draft = await chain.ainvoke([
-            SystemMessage(content=f"{PROMPT}\n{instructions}"),
-            HumanMessage(content=json.dumps(task, ensure_ascii=False)),
+        try:
+            chain = model.with_structured_output(schema, method="function_calling")
+            draft = await chain.ainvoke(messages)
+            return _activity_from_draft(request, draft, sources)
+        except (BadRequestError, OutputParserException, ValueError) as exc:
+            # Some providers reject tool calling or return unusable tool arguments.
+            # Retry once as plain JSON within the same overall request deadline.
+            logger.warning("Retrying tutor %s generation after %s", request.action, type(exc).__name__)
+        response = await model.ainvoke([
+            SystemMessage(content=(
+                f"{PROMPT}\n{instructions}\nReturn only a JSON object matching this schema, "
+                f"without Markdown fences or commentary:\n{json.dumps(schema.model_json_schema(), ensure_ascii=False)}"
+            )),
+            messages[1],
         ])
+        content = response.content
+        if not isinstance(content, str):
+            raise ValueError("Invalid study response content")
+        content = re.sub(r"^```(?:json)?\s*\n?(.*?)\n?```$", r"\1", content.strip(), flags=re.DOTALL)
+        return _activity_from_draft(request, schema.model_validate_json(content), sources)
 
+
+def _activity_from_draft(
+    request: StudyRequest, draft: LessonDraft | QuestionsDraft | None, sources: list[TutorSource],
+) -> StudyResponse:
+    sources_by_key = {key: source for key, source in enumerate(sources, 1)}
+
+    def resolve(keys: list[int]) -> list[uuid.UUID]:
+        if not keys or not set(keys) <= sources_by_key.keys():
+            raise ValueError("Invalid textbook citations")
+        return [sources_by_key[key].id for key in dict.fromkeys(keys)]
+
+    text_activity = request.action in {"explain", "summary"}
     questions = []
     lesson = None
     text = ""
@@ -223,5 +252,6 @@ async def generate_study(
         return await draft_activity(request, book.title, sources)
     except RateLimitExceededError as exc:
         raise HTTPException(429, "Study activity limit reached. You can still search the book.") from exc
-    except (RateLimitUnavailableError, LLMNotConfiguredError, APIError, OutputParserException, TimeoutError, ValueError):
+    except (RateLimitUnavailableError, LLMNotConfiguredError, APIError, OutputParserException, TimeoutError, ValueError) as exc:
+        logger.warning("Tutor %s generation unavailable: %s", request.action, type(exc).__name__)
         return fallback

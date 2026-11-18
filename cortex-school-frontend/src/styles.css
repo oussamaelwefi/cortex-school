@@ -855,6 +855,27 @@ small {
   margin: 0;
   overflow-wrap: anywhere;
 }
+.policy-document {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+}
+.policy-document-preview {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fff;
+}
+.policy-document-toolbar { display: grid; gap: 10px; padding: 12px; }
+.policy-document-toolbar p { margin: 0; color: #526a46; font-size: 12px; }
+.policy-pdf-reader { border-top: 1px solid var(--line); }
+.policy-page-controls { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 8px; font-size: 12px; }
+.policy-pdf-page { max-height: 70vh; overflow: auto; padding: 12px; background: #e9ede6; }
+.policy-pdf-page canvas { display: block; margin: 0 auto; background: #fff; box-shadow: 0 1px 5px #173b2f20; }
+.policy-pdf-page canvas[hidden] { display: none; }
+.policy-pdf-reader > :is(.loading, .error-box) { margin: 12px; }
+.policy-document-preview > :is(.loading, .error-box) { margin: 12px; }
 .policy-library-list {
   list-style: none;
   padding: 0;

@@ -65,6 +65,8 @@
 }
 .tutor-result-body { padding: 24px 26px 26px; }
 .tutor-result-note { color: var(--tutor-muted); margin: 0 0 15px; }
+.tutor-unavailable { margin-bottom: 15px; }
+.tutor-fallback-sources > summary { color: var(--tutor-muted); cursor: pointer; margin-bottom: 12px; }
 .tutor-takeaway {
   margin: 0 0 18px;
   padding: 13px 17px;
@@ -150,9 +152,16 @@
   background: #f6f8f5;
   border-radius: 7px;
 }
-.tutor-excerpt p + p { margin-top: 7px; }
+.tutor-excerpt > * + * { margin-top: 10px; }
+.tutor-excerpt > :first-child { margin-top: 0; }
+.tutor-excerpt > :last-child { margin-bottom: 0; }
+.tutor-excerpt li { line-height: 1.9; }
+.tutor-excerpt :is(h1, h2, h3, h4, h5, h6) { font-size: 16px; line-height: 1.8; }
+.tutor-excerpt .katex-display { overflow-x: auto; overflow-y: hidden; padding-block: 5px; margin: 8px 0; }
+.tutor-result .katex { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+.tutor-result .katex-display { direction: ltr; text-align: center; max-width: 100%; }
 .tutor-excerpt-table { overflow-x: auto; }
-.tutor-excerpt-table td { font-size: 13px; padding: 6px 9px; color: #30483d; overflow: visible; }
+.tutor-excerpt-table :is(th, td) { font-size: 13px; padding: 6px 9px; color: #30483d; overflow: visible; }
 .tutor-quiz-progress {
   display: grid;
   gap: 7px;

@@ -21,6 +21,26 @@ application configured in `app/core/auth.py`.
 
 Set `WORKOS_OPERATOR_USER_IDS` in `docker/.env` to a JSON array of WorkOS user IDs for staff authorized to maintain data across schools. API documentation accepts a current WorkOS bearer token from an operator. To enable the browser console at `/admin/`, also set `ADMIN_SESSION_SECRET` to a randomly generated secret of at least 32 characters. Use the console’s WorkOS access-token form, then open `/api/docs` in the same browser session. The console session expires with that token.
 
+## Local Docker runtime for this checkout
+
+The local stack uses `docker/docker-compose.local.yml`. It builds the API,
+worker, scheduler, and frontend from this repository without bind mounts, and
+reuses the existing `docker_db-data`, `docker_redis-data`, and `docker_default`
+network. Keep the local credentials in the ignored `docker/.env` file.
+
+From this repository's `cortex-school-backend/docker` directory, rebuild and
+replace the application containers after changing code:
+
+```powershell
+docker compose --env-file .env -f docker-compose.local.yml up -d --build --no-deps api worker scheduler frontend
+```
+
+Open http://localhost:5173. This setup runs the code copied into each image;
+source edits take effect after rebuilding. PostgreSQL and Redis retain their
+existing containers and data during the command above. The local Compose file
+requires the existing data volumes and network; use the standard configuration
+for a fresh installation.
+
 ## AI assistant configuration
 
 Configure the provider in `docker/.env`:

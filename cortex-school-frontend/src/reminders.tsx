@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Bell, BookOpen, Download, FileText, LoaderCircle, Send, Sparkles, Trash2 } from "lucide-react";
-import { findEndpoint, useApi, type Api } from "./api";
+import { ArrowLeft, Bell, BookOpen, FileText, LoaderCircle, Send, Sparkles, Trash2 } from "lucide-react";
+import { findEndpoint, useApi } from "./api";
 import { label } from "./forms";
 import { t } from "./i18n";
 import { Badge, display, Empty, ErrorBox, Loading, Modal, useRemote } from "./ui";
-import type { Data, Endpoint } from "./types";
+import type { Data } from "./types";
+import { PolicyDocument } from "./policy-document";
 
 const readReminderPath = "/student-updates/{update_id}/reminder";
 const getReminder = findEndpoint("GET", readReminderPath);
@@ -277,7 +278,7 @@ export function SchoolPoliciesButton() {
         <BookOpen size={16} /> {t("School policies")}
       </button>
       {open && (
-        <Modal title="School policies" onClose={close}>
+        <Modal title="School policies" wide onClose={close}>
           <PolicyLibrary />
         </Modal>
       )}
@@ -296,7 +297,6 @@ function PolicyLibrary() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-  const [downloading, setDownloading] = useState<string | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const saving = busy || deleting;
@@ -338,18 +338,6 @@ function PolicyLibrary() {
       setError((err as Error).message);
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function download(policy: PolicyFile) {
-    setDownloading(policy.id);
-    setError("");
-    try {
-      await savePolicyPdf(api, downloadAdminPolicy, policy);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setDownloading(null);
     }
   }
 
@@ -400,18 +388,14 @@ function PolicyLibrary() {
                 </div>
               ) : (
                 <div className="reminder-actions">
-                  {policy.has_pdf && (
-                    <button type="button" className="button small subtle" disabled={saving || downloading !== null}
-                      aria-label={`${t("Download PDF")} · ${policy.title}`} onClick={() => download(policy)}>
-                      {downloading === policy.id ? <LoaderCircle className="spin" size={15} /> : <Download size={15} />}
-                      {t("Download PDF")}
-                    </button>
-                  )}
-                  <button type="button" className="button small subtle" disabled={saving || pendingRemoval !== null || downloading !== null}
+                  <button type="button" className="button small subtle" disabled={saving || pendingRemoval !== null}
                     aria-label={`${t("Delete policy")} · ${policy.title}`} onClick={() => setPendingRemoval(policy.id)}>
                     <Trash2 size={15} />{t("Delete")}
                   </button>
                 </div>
+              )}
+              {policy.has_pdf && pendingRemoval !== policy.id && (
+                <PolicyDocument policy={policy} endpoint={downloadAdminPolicy} disabled={saving} />
               )}
             </li>
           ))}
@@ -434,7 +418,7 @@ function PolicyLibrary() {
             <input type="file" accept=".pdf,application/pdf" required disabled={busy}
               onChange={(event) => setPdf(event.target.files?.[0])} />
             <small>{t("Choose a PDF with selectable text, up to 10 MB and 100 pages.")}</small>
-            <small>{t("Guardians at your school can download uploaded PDFs.")}</small>
+            <small>{t("Guardians at your school can read uploaded PDFs online.")}</small>
           </label>
         ) : (
           <>
@@ -469,48 +453,16 @@ type GuardianPolicySource = {
   has_pdf: boolean;
 };
 
-async function savePolicyPdf(api: Api, endpoint: Endpoint, policy: PolicyFile) {
-  const file = await api(endpoint, { document_id: policy.id });
-  if (!(file instanceof Blob)) throw new Error("This policy PDF could not be downloaded.");
-  const url = URL.createObjectURL(file);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${policy.title}.pdf`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function GuardianPolicyList({ policies }: { policies: PolicyFile[] }) {
-  const api = useApi();
-  const [downloading, setDownloading] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  async function download(policy: PolicyFile) {
-    setDownloading(policy.id);
-    setError("");
-    try {
-      await savePolicyPdf(api, downloadGuardianPolicy, policy);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setDownloading(null);
-    }
-  }
-
   if (!policies.length) return <Empty title="No school policy PDFs yet" text="Files shared by your school will appear here." />;
 
   return (
     <div className="feed-list">
-      {error && <ErrorBox error={error} />}
       {policies.map((policy) => (
         <article className="feed-card policy-file" key={policy.id}>
           <span className="avatar"><FileText size={17} /></span>
           <h3>{policy.title}</h3>
-          <button type="button" className="button small subtle" disabled={downloading !== null}
-            aria-label={`${t("Download PDF")} · ${policy.title}`} onClick={() => download(policy)}>
-            {downloading === policy.id ? <LoaderCircle className="spin" size={15} /> : <Download size={15} />}
-            {t("Download PDF")}
-          </button>
+          <PolicyDocument policy={policy} endpoint={downloadGuardianPolicy} />
         </article>
       ))}
     </div>
@@ -521,23 +473,8 @@ function GuardianReminderSources({ sources, defaultExpanded = false }: {
   sources: GuardianPolicySource[];
   defaultExpanded?: boolean;
 }) {
-  const api = useApi();
   const panelId = useId();
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const [downloading, setDownloading] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  async function download(source: GuardianPolicySource) {
-    setDownloading(source.id);
-    setError("");
-    try {
-      await savePolicyPdf(api, downloadGuardianPolicy, { id: source.document_id, title: source.title });
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setDownloading(null);
-    }
-  }
 
   if (!sources.length) return null;
   return (
@@ -548,17 +485,12 @@ function GuardianReminderSources({ sources, defaultExpanded = false }: {
         {t(expanded ? "Hide policy sources" : "View policy sources")}
       </button>
       <div id={panelId} hidden={!expanded}>
-        {error && <ErrorBox error={error} />}
         {sources.map((source) => (
           <div key={source.id} className="reminder-source">
             <strong>{source.title} · {t(source.heading)}</strong>
             <blockquote>{source.excerpt}</blockquote>
             {source.has_pdf && (
-              <button type="button" className="button small subtle" disabled={downloading !== null}
-                aria-label={`${t("Download PDF")} · ${source.title}`} onClick={() => download(source)}>
-                {downloading === source.id ? <LoaderCircle className="spin" size={15} /> : <Download size={15} />}
-                {t("Download PDF")}
-              </button>
+              <PolicyDocument policy={{ id: source.document_id, title: source.title }} endpoint={downloadGuardianPolicy} />
             )}
           </div>
         ))}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BookOpen, Check, ChevronLeft, ChevronRight, ClipboardList, Search, Sparkles } from "lucide-react";
 import { t } from "./i18n";
 import { Empty } from "./ui";
+import { StudyMarkdown } from "./study-markdown";
 
 export type Source = { id: string; page: number; excerpt: string };
 export type PageSource = { page: number; passages: Source[] };
@@ -18,8 +19,6 @@ export type Activity = {
   sources: Source[];
 };
 
-const expression = /(\(?[\d٠-٩۰-۹]+(?:[.,٫][\d٠-٩۰-۹]+)?(?:\s*\)?\s*[=+−×*÷/<>≤≥-]\s*\(?\s*[\d٠-٩۰-۹]+(?:[.,٫][\d٠-٩۰-۹]+)?)+\)?)/g;
-
 function direction(text: string) {
   return /^[^\p{L}]*\p{Script=Arabic}/u.test(text) ? "rtl" : undefined;
 }
@@ -29,9 +28,7 @@ export function pageLabel(page: number) {
 }
 
 function StudyText({ text }: { text: string }) {
-  const readable = text.replace(/\*\*([^*\n]+)\*\*/g, "$1");
-  return readable.split(expression).map((part, index) =>
-    index % 2 === 0 ? part : <bdi dir="ltr" className="tutor-inline-math" key={index}>{part}</bdi>);
+  return <StudyMarkdown text={text} inline />;
 }
 
 function groupPages(sources: Source[]): PageSource[] {
@@ -62,24 +59,7 @@ function SourceLinks({ sources, onOpenPage }: { sources: Source[]; onOpenPage: (
 export function SourceExcerpt({ source }: { source: Source }) {
   return (
     <blockquote className="tutor-excerpt" dir="auto">
-      {source.excerpt.trim().split(/\n\s*\n/).map((paragraph, index) => {
-        const tableLines = paragraph.split("\n").filter((line) => line.trimStart().startsWith("|"));
-        if (tableLines.length === paragraph.split("\n").length) {
-          const rows = tableLines.map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim()))
-            .filter((row) => !row.every((cell) => /^:?-+:?$/.test(cell)));
-          return rows.length > 0 && (
-            <div className="tutor-excerpt-table" key={index}>
-              <table aria-label={t("Book excerpt")} dir="ltr"><tbody>
-                {rows.map((row, rowIndex) => (
-                  <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex} dir="auto">{cell}</td>)}</tr>
-                ))}
-              </tbody></table>
-            </div>
-          );
-        }
-        const clean = paragraph.replace(/^#{1,6}\s+/gm, "").replace(/^[-*]\s+/gm, "• ");
-        return <p key={index}><StudyText text={clean} /></p>;
-      })}
+      <StudyMarkdown text={source.excerpt} />
     </blockquote>
   );
 }
@@ -199,12 +179,13 @@ function PracticeQuestion({ question, index, sources, onOpenPage }: {
 
 const resultLabels = { search: "Book passages", explain: "Explanation", summary: "Summary", quiz: "Quiz", practice: "Practice test" };
 
-export function StudyResult({ activity, onOpenPage }: { activity: Activity; onOpenPage: (page: PageSource) => void }) {
+export function StudyResult({ activity, onOpenPage, onRetry }: { activity: Activity; onOpenPage: (page: PageSource) => void; onRetry?: () => void }) {
   if (activity.status === "no_sources") {
     return <Empty title="No matching passages" text="Try a different topic or choose another page from the book." />;
   }
-  const isSearch = activity.action === "search" || activity.status === "generation_unavailable";
-  const label = t(isSearch ? "Book passages" : resultLabels[activity.action]);
+  const isSearch = activity.action === "search";
+  const unavailable = activity.status === "generation_unavailable";
+  const label = t(resultLabels[activity.action]);
   const Icon = isSearch ? Search : activity.lesson ? Sparkles : ClipboardList;
   const title = activity.lesson?.title ?? label;
   return (
@@ -217,10 +198,18 @@ export function StudyResult({ activity, onOpenPage }: { activity: Activity; onOp
         </div>
       </header>
       <div className="tutor-result-body">
-        {activity.status === "generation_unavailable" && (
-          <p className="tutor-result-note">{t("The tutor could not generate this activity. You can read the matching passages below.")}</p>
-        )}
-        {isSearch
+        {unavailable ? (
+          <>
+            <div className="tutor-unavailable" role="status">
+              <p className="tutor-result-note">{t("The tutor could not generate this activity. Please try again.")}</p>
+              {onRetry && <button type="button" className="button small primary" onClick={onRetry}>{t("Try again")}</button>}
+            </div>
+            <details className="tutor-fallback-sources">
+              <summary>{t("Read matching book passages")}</summary>
+              <SearchResults sources={activity.sources} onOpenPage={onOpenPage} />
+            </details>
+          </>
+        ) : isSearch
           ? <SearchResults sources={activity.sources} onOpenPage={onOpenPage} />
           : activity.lesson ? (
             <>
