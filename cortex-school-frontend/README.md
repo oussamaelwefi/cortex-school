@@ -57,6 +57,15 @@ pages and controls their language independently.
 - Guardian: family overview; child records; family feeds and update details; weekly explanations; attendance history; registration creation, editing, and withdrawal; update read/acknowledgement/reply; notifications and mark-read.
 - Shared: responsive navigation, search, query filters, CSV export, nested record details, contextual actions, validation errors, loading/empty/error states, modal keyboard navigation, and destructive-action confirmation.
 
+The administrator’s **Academic years** page groups years by status and keeps the
+selected year's dates, calendar, and main actions together. Create and edit years,
+add teaching periods or other calendar events, check readiness, publish, and close
+directly from the page. Drafts explain missing publication requirements; at least
+one `term` is required, while missing classes, teacher assignments, and placements
+are non-blocking warnings. Publication and closure require confirmation. Closed
+years keep their calendar available in read-only mode. Class links preserve the
+selected year, and year/calendar changes refresh the shared workspace data.
+
 The administrator’s **Needs review** page has a dedicated queue with school-wide
 open, urgent, and follow-up counts; category filters; priority and date filters;
 and pagination. Each issue keeps its context, deadline, and next action together.
@@ -73,7 +82,7 @@ The guardian overview uses the same child cards. Attendance is available inside
 **My children**; the former `/attendance` page redirects there. Registration
 requests remain in their own workspace.
 
-Open a record to see related actions with its identifiers prefilled. Each feature's **All workflows** panel exposes its remaining backend operations as typed forms. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
+On generic resource pages, open a record to see related actions with its identifiers prefilled. Their **All workflows** panels expose remaining backend operations as typed forms. Dedicated workspaces such as **Academic years** present their actions directly. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
 
 Administrators can use **Invitations → Import CSV** and choose one of four import
 types: administrators, teachers, guardians, or mixed roles. The first three apply

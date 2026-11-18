@@ -69,6 +69,7 @@ import { NeedsReviewPage } from "./needs-review";
 import { GuardianFamilyPage } from "./guardian-family";
 import { SchoolMembersPage } from "./school-members";
 import { AcademicDirectoryPage } from "./academic-directory";
+import { AcademicYearsPage } from "./academic-years";
 import { StudentGuardianContext } from "./student-guardians";
 import { SchoolSettingsPage } from "./school-settings";
 import { OnboardingPage } from "./onboarding";
@@ -79,6 +80,7 @@ import "./guardian-family.css";
 import "./invitation-import.css";
 import "./school-members.css";
 import "./academic-directory.css";
+import "./academic-years.css";
 import "./student-guardians.css";
 import "./school-settings.css";
 const roleNames = {
@@ -575,7 +577,7 @@ function Shell({
               {!organization && (
                 <ErrorBox error="Your account is not linked to a school organization. Contact your administrator to enable school features." />
               )}
-              {role !== "teacher" && !["/analytics", "/tutor", "/members", "/students", "/classrooms", "/settings"].includes(location.pathname) && years.data?.length > 0 && (
+              {role !== "teacher" && !["/analytics", "/tutor", "/members", "/students", "/classrooms", "/academic-years", "/settings"].includes(location.pathname) && years.data?.length > 0 && (
                 <div className="year-selector">
                   <CalendarDays size={14} />
                   <select
@@ -619,6 +621,8 @@ function Shell({
                           error={members.error}
                           onRefresh={() => setMemberRevision((value) => value + 1)}
                         />
+                      ) : role === "admin" && page.key === "academic-years" ? (
+                        <AcademicYearsPage years={years} initialYear={activeYear} onYearChange={setYear} onRefresh={() => setRevision((value) => value + 1)} />
                       ) : role === "admin" && (page.key === "students" || page.key === "classrooms") ? (
                         <AcademicDirectoryPage key={page.key} mode={page.key} years={years} initialYear={activeYear} onYearChange={setYear} members={members} onRefreshYears={() => setRevision((value) => value + 1)} />
                       ) : role === "admin" && page.key === "settings" ? (
