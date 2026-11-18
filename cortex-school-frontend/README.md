@@ -147,6 +147,19 @@ Guardians can read their school’s uploaded PDFs online from **School policies*
 
 Administrators can preview, download, or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
 
+## Workspace identity
+
+Each signed-in space has a persistent role label, school name and distinct accent:
+green for school administration, teal for teachers and purple for families. Home pages
+prioritize each role’s daily tasks. Accounts with multiple authorized roles can use
+**Switch workspace** to return to the selected role’s home page. The accent also
+applies to dialogs and is cleared on sign-out.
+
+School names come from the authenticated `GET /school/context` endpoint. Approved
+onboarding requests supply the name locally; older schools use a bounded WorkOS
+lookup. If no name is available, the interface displays **Your school**. Deploy the
+backend and frontend changes together; no database migration is needed.
+
 ## API contract maintenance
 
 ```powershell
@@ -163,7 +176,11 @@ Set `VITE_API_BASE_URL` to the deployed API URL (including `/api`) or configure 
 
 ## Verification
 
-Production build and contract tests are available locally. Real API, database, invitations, and authentication require the running backend and configured WorkOS application. Browser visual verification was unavailable during implementation because the browser automation runtime failed to start.
+Production build and contract tests are available locally. Workspace identities were
+also checked in headless Chrome with a mocked API on desktop and mobile, including
+role switching, dialogs, school-name fallback and responsive headers. Real API,
+database, invitations, and authentication require the running backend and configured
+WorkOS application.
 
 ## Invitation acceptance
 

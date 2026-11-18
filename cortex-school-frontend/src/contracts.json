@@ -1823,6 +1823,17 @@
     "upload": false
   },
   {
+    "id": "get_school_context",
+    "title": "Get school context",
+    "method": "GET",
+    "path": "/school/context",
+    "module": "schools",
+    "role": "shared",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
     "id": "get_school_attendance_settings",
     "title": "Get school attendance settings",
     "method": "GET",

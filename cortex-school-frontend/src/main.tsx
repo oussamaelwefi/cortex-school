@@ -13,6 +13,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import {
   AuthKitProvider,
@@ -27,7 +28,6 @@ import {
   BookOpen,
   CalendarDays,
   Check,
-  ChevronDown,
   ClipboardCheck,
   GraduationCap,
   Heart,
@@ -74,6 +74,12 @@ import { TeacherClassroomsPage } from "./teacher-classrooms";
 import { StudentGuardianContext } from "./student-guardians";
 import { SchoolSettingsPage } from "./school-settings";
 import { OnboardingPage } from "./onboarding";
+import {
+  WorkspaceIdentity,
+  WorkspaceSwitch,
+  useWorkspaceTheme,
+  workspaceProfiles,
+} from "./workspace-identity";
 import "./onboarding.css";
 import "./styles.css";
 import "./needs-review.css";
@@ -85,11 +91,7 @@ import "./academic-years.css";
 import "./teacher-classrooms.css";
 import "./student-guardians.css";
 import "./school-settings.css";
-const roleNames = {
-  admin: "School administrator",
-  teacher: "Teacher",
-  guardian: "Parent & guardian",
-};
+import "./workspace-identity.css";
 function Brand() {
   return (
     <div className="brand">
@@ -354,6 +356,20 @@ function Shell({
     [toast, setToast] = useState(""),
     [globalSearch, setGlobalSearch] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  useWorkspaceTheme(role);
+  const workspace = workspaceProfiles[role];
+  const WorkspaceIcon = workspace.icon;
+  const school = useRemote(
+    findEndpoint("GET", "/school/context"),
+    { organization_id: organization },
+    0,
+    !!organization,
+  );
+  const schoolName =
+    school.data?.organization_id === organization && school.data?.name?.trim()
+      ? school.data.name.trim()
+      : t("Your school");
   useEffect(() => {
     setMenu(false);
     setGlobalSearch("");
@@ -450,7 +466,7 @@ function Shell({
     >
       <ChoicesContext.Provider value={choices}>
         <StudentGuardianContext.Provider value={{ enabled: role === "admin", students: students.data, members: members.data, loading: students.loading || members.loading, error: students.error || members.error }}>
-        <div className="app-shell">
+        <div className="app-shell" data-role={role}>
           {menu && (
             <button
               className="sidebar-overlay"
@@ -464,19 +480,18 @@ function Shell({
             </NavLink>
             <div className="school-switch">
               <span className="school-avatar">
-                <GraduationCap size={20} />
+                <WorkspaceIcon size={20} />
               </span>
               <div>
-                <strong>{t("Your school")}</strong>
-                <span>{t(roleNames[role])}</span>
+                <strong>{schoolName}</strong>
+                <span>{t(workspace.label)}</span>
               </div>
-              <ChevronDown size={15} />
             </div>
             <p className="nav-label">{t("WORKSPACE")}</p>
             <nav aria-label={t("Main navigation")}>
               <NavLink to="/" end>
                 <Home size={18} />
-                <span>{role === "teacher" ? t("Today") : t("Overview")}</span>
+                <span>{t(workspace.home)}</span>
               </NavLink>
               {pages[role].map((p) => {
                 const Icon = icons[p.key] || BookOpen;
@@ -518,16 +533,16 @@ function Shell({
               >
                 <Menu size={21} />
               </button>
-              <div className="breadcrumb">
-                {t(" Workspace ")}
-                <span>/</span>{" "}
-                <strong>
-                  {t(
-                    pages[role].find((p) => `/${p.key}` === location.pathname)
-                      ?.title || "Overview",
-                  )}
-                </strong>
-              </div>
+              <WorkspaceIdentity
+                role={role}
+                schoolName={schoolName}
+                page={
+                  pages[role].find((p) =>
+                    location.pathname === `/${p.key}` ||
+                    location.pathname.startsWith(`/${p.key}/`),
+                  )?.title || workspace.home
+                }
+              />
               <div className="topbar-right">
                 <LanguageSwitch />
                 <div className="global-search">
@@ -553,25 +568,19 @@ function Shell({
                     </div>
                   )}
                 </div>
-                {roles.length > 1 && (
-                  <select
-                    className="role-switch"
-                    aria-label={t("Switch workspace role")}
-                    value={role}
-                    onChange={(e) => {
-                      setRole(e.target.value as Role);
+                <WorkspaceSwitch
+                  role={role}
+                  roles={roles}
+                  onChange={(next) => {
+                    React.startTransition(() => {
+                      setRole(next);
                       setYear("");
-                      window.history.replaceState(null, "", "/");
-                      window.dispatchEvent(new PopStateEvent("popstate"));
-                    }}
-                  >
-                    {roles.map((r) => (
-                      <option key={r} value={r}>
-                        {t(roleNames[r])}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                      setMenu(false);
+                      setGlobalSearch("");
+                      navigate("/", { replace: true });
+                    });
+                  }}
+                />
                 <span className="topbar-avatar">{name[0] || "C"}</span>
               </div>
             </header>

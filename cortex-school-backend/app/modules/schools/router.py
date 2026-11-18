@@ -1,23 +1,32 @@
+import logging
+
+import httpx
 from fastapi import Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from workos import AsyncWorkOSClient, WorkOSError
 
 from core.auth import Permission, get_current_user, require_permission
+from core.config import settings
 from core.db import db_session
 from core.router import APIRouter
+from modules.onboarding.models import SchoolRequest, SchoolRequestStatus
 from modules.schools.models import School
 from modules.schools.schemas import (
     SchoolAISettingsRequest,
     SchoolAISettingsResponse,
     SchoolAttendanceSettingsRequest,
     SchoolAttendanceSettingsResponse,
+    SchoolContextResponse,
 )
 
 
 router = APIRouter(
     prefix="/school",
     tags=["School Settings"],
-    dependencies=[Depends(require_permission(Permission.SCHOOL_MANAGE))],
 )
+logger = logging.getLogger(__name__)
+manage_school = [Depends(require_permission(Permission.SCHOOL_MANAGE))]
 
 
 async def _get_current_school(
@@ -33,9 +42,37 @@ async def _get_current_school(
     return school
 
 
+@router.get("/context", response_model=SchoolContextResponse)
+async def get_school_context(
+    session: AsyncSession = Depends(db_session),
+    current_user: dict = Depends(get_current_user),
+):
+    school = await _get_current_school(session, current_user)
+    name = await session.scalar(select(SchoolRequest.school_name).where(
+        SchoolRequest.organization_id == school.organization_id,
+        SchoolRequest.status == SchoolRequestStatus.APPROVED,
+    ))
+    # Older schools may predate the onboarding workflow. Resolve their display
+    # name without making the workspace depend on WorkOS availability.
+    if not name and settings.WORKOS_API_KEY:
+        try:
+            async with AsyncWorkOSClient(
+                api_key=settings.WORKOS_API_KEY,
+                base_url=settings.WORKOS_API_BASE_URL,
+                request_timeout=3,
+                max_retries=0,
+            ) as client:
+                organization = await client.organizations.get_organization(school.organization_id)
+                name = organization.name
+        except (WorkOSError, httpx.HTTPError):
+            logger.warning("School display name is temporarily unavailable")
+    return SchoolContextResponse(organization_id=school.organization_id, name=name)
+
+
 @router.get(
     "/attendance-settings",
     response_model=SchoolAttendanceSettingsResponse,
+    dependencies=manage_school,
 )
 async def get_school_attendance_settings(
     session: AsyncSession = Depends(db_session),
@@ -47,6 +84,7 @@ async def get_school_attendance_settings(
 @router.put(
     "/attendance-settings",
     response_model=SchoolAttendanceSettingsResponse,
+    dependencies=manage_school,
 )
 async def replace_school_attendance_settings(
     payload: SchoolAttendanceSettingsRequest,
@@ -66,6 +104,7 @@ async def replace_school_attendance_settings(
 @router.get(
     "/ai-settings",
     response_model=SchoolAISettingsResponse,
+    dependencies=manage_school,
 )
 async def get_school_ai_settings(
     session: AsyncSession = Depends(db_session),
@@ -77,6 +116,7 @@ async def get_school_ai_settings(
 @router.put(
     "/ai-settings",
     response_model=SchoolAISettingsResponse,
+    dependencies=manage_school,
 )
 async def replace_school_ai_settings(
     payload: SchoolAISettingsRequest,

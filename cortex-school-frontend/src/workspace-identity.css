@@ -1,0 +1,336 @@
+html[data-workspace-role="admin"],
+.app-shell[data-role="admin"] {
+  --workspace-accent: #214e40;
+  --workspace-ink: #214e40;
+  --workspace-soft: #edf3e9;
+  --workspace-tint: #f8faf6;
+  --workspace-border: #d8e4d2;
+}
+html[data-workspace-role="teacher"],
+.app-shell[data-role="teacher"] {
+  --workspace-accent: #206b86;
+  --workspace-ink: #1d5167;
+  --workspace-soft: #e8f3f7;
+  --workspace-tint: #f7fafc;
+  --workspace-border: #cce2eb;
+}
+html[data-workspace-role="guardian"],
+.app-shell[data-role="guardian"] {
+  --workspace-accent: #815d8d;
+  --workspace-ink: #60436a;
+  --workspace-soft: #f3edf7;
+  --workspace-tint: #fcf9fd;
+  --workspace-border: #e3d5ea;
+}
+html[data-workspace-role] {
+  --green: var(--workspace-accent);
+}
+html[data-workspace-role] .primary:hover {
+  background: var(--workspace-ink);
+}
+html[data-workspace-role]
+  :is(button, a, input, select, textarea):focus-visible {
+  outline-color: var(--workspace-accent);
+}
+.app-shell[data-role] .text-button {
+  color: var(--workspace-accent);
+}
+.app-shell[data-role] :is(.quick-icon, .class-card > svg) {
+  color: var(--workspace-accent);
+  background: var(--workspace-soft);
+}
+.app-shell[data-role] .sidebar {
+  background: var(--workspace-tint);
+}
+.app-shell[data-role] .school-switch {
+  background: var(--workspace-soft);
+  border-color: var(--workspace-border);
+  color: var(--workspace-ink);
+}
+.app-shell[data-role] .school-switch > div {
+  min-width: 0;
+}
+.app-shell[data-role] .school-switch strong {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.app-shell[data-role] .school-switch div > span {
+  color: var(--workspace-ink);
+  line-height: 1.5;
+}
+.app-shell[data-role] .school-avatar,
+.workspace-identity-icon {
+  background: var(--workspace-border);
+  color: var(--workspace-accent);
+  flex-shrink: 0;
+}
+.app-shell[data-role] .sidebar nav > a.active {
+  color: var(--workspace-ink);
+  background: var(--workspace-soft);
+  box-shadow: inset 3px 0 var(--workspace-accent);
+}
+.app-shell[data-role] .sidebar nav > a:hover,
+.app-shell[data-role] .search-results > a:hover {
+  background: var(--workspace-soft);
+}
+.app-shell[data-role] .sidebar-card {
+  background: var(--workspace-soft);
+  border-color: var(--workspace-border);
+}
+.app-shell[data-role] .sidebar-card > span {
+  color: var(--workspace-accent);
+}
+.app-shell[data-role] .topbar {
+  min-height: 86px;
+  height: auto;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  border-top: 3px solid var(--workspace-accent);
+  background: #fff;
+}
+.workspace-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.workspace-identity-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.workspace-identity > div {
+  min-width: 0;
+}
+.workspace-identity strong {
+  color: var(--workspace-ink);
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  display: block;
+}
+.workspace-location {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  color: #707b79;
+  font-size: 10px;
+}
+.workspace-location > span:not(:nth-child(2)) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 210px;
+}
+.workspace-location > span:nth-child(2) {
+  color: #b1b8b5;
+}
+.app-shell[data-role] .topbar-right {
+  gap: 16px;
+  flex-shrink: 0;
+}
+.workspace-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.workspace-switch > span {
+  font-size: 9px;
+  color: #707b79;
+}
+.app-shell[data-role] .workspace-switch .role-switch {
+  color: var(--workspace-ink);
+  background: var(--workspace-soft);
+  border: 1px solid var(--workspace-border);
+  font-size: 11px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  max-width: 220px;
+}
+.app-shell[data-role] .topbar-avatar {
+  color: var(--workspace-ink);
+  background: var(--workspace-soft);
+}
+.workspace-welcome.welcome-banner {
+  background: var(--workspace-soft);
+  border-color: var(--workspace-border);
+  padding: 30px;
+  min-height: 235px;
+  align-items: center;
+}
+.workspace-welcome.welcome-banner > div:first-child {
+  max-width: 560px;
+}
+.workspace-welcome .banner-label,
+.workspace-welcome.welcome-banner h2,
+.workspace-welcome .banner-link {
+  color: var(--workspace-ink);
+}
+.workspace-welcome.welcome-banner h2 {
+  font-size: 30px;
+  max-width: 420px;
+}
+.workspace-welcome.welcome-banner p {
+  color: var(--workspace-ink);
+  font-size: 12px;
+  line-height: 1.7;
+  max-width: 440px;
+}
+.workspace-welcome .banner-label {
+  font-size: 10px;
+  letter-spacing: 0;
+  margin-bottom: 12px;
+}
+.workspace-welcome .banner-link {
+  font-size: 12px;
+}
+.workspace-emblem {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 1px solid var(--workspace-border);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+  color: var(--workspace-accent);
+  background: #ffffff66;
+  box-shadow: 0 0 0 18px #ffffff33;
+}
+.workspace-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 20px;
+}
+.workspace-highlights > span {
+  font-size: 10px;
+  color: var(--workspace-ink);
+  padding: 5px 9px;
+  background: #ffffffaa;
+  border-radius: 6px;
+}
+.app-shell[data-role] .stat-card > div > svg {
+  color: var(--workspace-accent);
+}
+.app-shell[data-role] .stat-card:hover {
+  border-color: var(--workspace-accent);
+}
+.app-shell[data-role] .stat-card strong {
+  color: var(--workspace-ink);
+}
+.app-shell[data-role="guardian"] .gf-child-avatar {
+  color: var(--workspace-accent);
+  background: var(--workspace-soft);
+}
+.app-shell[data-role="teacher"] .tc-filters > button[aria-pressed="true"],
+.app-shell[data-role="teacher"] .tc-tabs > button[aria-selected="true"] {
+  background: var(--workspace-soft);
+  color: var(--workspace-ink);
+  border-color: var(--workspace-border);
+}
+.app-shell[data-role="teacher"] .tc-class-card:not(.upcoming) .tc-class-icon,
+.app-shell[data-role="teacher"] .tc-detail-icon {
+  color: var(--workspace-accent);
+  background: var(--workspace-soft);
+}
+.app-shell[data-role="teacher"]
+  .tc-filters
+  > button[aria-pressed="true"]
+  > span {
+  background: var(--workspace-border);
+  color: var(--workspace-ink);
+}
+.app-shell[data-role="teacher"] .tc-tabs > button[aria-selected="true"] {
+  border-bottom-color: var(--workspace-accent);
+}
+@media (max-width: 1350px) {
+  .app-shell[data-role] .global-search {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .workspace-identity strong {
+    font-size: 14px;
+  }
+  .workspace-location > span:not(:nth-child(2)) {
+    max-width: 145px;
+  }
+  .workspace-emblem {
+    width: 120px;
+    height: 120px;
+    margin-right: 0;
+  }
+  .workspace-emblem > svg {
+    width: 58px;
+    height: 58px;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell[data-role] .topbar {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 12px 10px;
+    padding: 13px 16px;
+  }
+  .workspace-identity {
+    gap: 9px;
+  }
+  .workspace-identity-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+  .workspace-identity strong {
+    font-size: 14px;
+  }
+  .workspace-location {
+    font-size: 9px;
+    gap: 6px;
+  }
+  .workspace-location > span:first-child {
+    max-width: 145px;
+  }
+  .workspace-location > span:last-child {
+    max-width: 105px;
+  }
+  .app-shell[data-role] .topbar-right {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  .workspace-switch {
+    flex: 1;
+  }
+  .app-shell[data-role] .workspace-switch .role-switch {
+    max-width: 100%;
+    width: 100%;
+  }
+  .workspace-welcome.welcome-banner {
+    padding: 24px;
+    min-height: 0;
+  }
+  .workspace-welcome.welcome-banner > div:first-child {
+    max-width: none;
+  }
+  .workspace-welcome.welcome-banner h2 {
+    font-size: 26px;
+  }
+  .workspace-welcome.welcome-banner p {
+    font-size: 12px;
+    max-width: none;
+  }
+  .workspace-welcome .banner-label {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .workspace-emblem {
+    display: none;
+  }
+}

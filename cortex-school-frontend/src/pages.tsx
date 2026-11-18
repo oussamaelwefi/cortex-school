@@ -37,6 +37,7 @@ import type { Data, Endpoint, Role, SchoolMemberIdentity } from "./types";
 import { ChatAssistant } from "./chat";
 import { GuardianNotifications, GuardianPolicyList, reminderReviewHref, SchoolPoliciesButton } from "./reminders";
 import { GuardianChildCards } from "./guardian-family";
+import { WorkspaceWelcome, workspaceProfiles } from "./workspace-identity";
 
 const registrationDecisions = {
   approve: findEndpoint("POST", "/registration-requests/{request_id}/approve/"),
@@ -267,6 +268,7 @@ export function Heading({
   );
 }
 export function Dashboard({ role, name }: { role: Role; name: string }) {
+  const workspace = workspaceProfiles[role];
   const navigate = useNavigate();
   const [refresh, setRefresh] = useState(0);
   const ep = findEndpoint(
@@ -402,16 +404,8 @@ export function Dashboard({ role, name }: { role: Role; name: string }) {
     <>
       <Heading
         eyebrow={date}
-        title={t(`Good to see you${name ? `, ${name}` : ""}.`)}
-        description={
-          role === "admin"
-            ? t(
-                "A little clarity for a busy school day. Here’s what’s happening.",
-              )
-            : role === "teacher"
-              ? t("Your day of learning starts here.")
-              : t("A window into their world of learning.")
-        }
+        title={t(workspace.title)}
+        description={t(workspace.description)}
       >
         <button
           className="button subtle"
@@ -426,84 +420,7 @@ export function Dashboard({ role, name }: { role: Role; name: string }) {
           </Link>
         )}
       </Heading>
-      <section className="welcome-banner">
-        <div>
-          <span className="banner-label">
-            <span />
-            {t(" THE SCHOOL DAY, CONNECTED ")}
-          </span>
-          <h2>
-            {role === "admin" ? (
-              <>
-                {t(" More connection. ")}
-                <br />
-                {t(" More room to grow. ")}
-              </>
-            ) : role === "teacher" ? (
-              <>
-                {t(" Small moments. ")}
-                <br />
-                {t(" Lasting impact. ")}
-              </>
-            ) : (
-              <>
-                {t(" Their little steps. ")}
-                <br />
-                {t(" Your shared journey. ")}
-              </>
-            )}
-          </h2>
-          <p>
-            {role === "admin"
-              ? t(
-                  "People, classrooms, and the moments that matter — together in one thoughtful workspace.",
-                )
-              : role === "teacher"
-                ? t(
-                    "Bring your classroom and families a little closer, one update at a time.",
-                  )
-                : t(
-                    "Stay close to classroom stories, school days, and every new discovery.",
-                  )}
-          </p>
-          <Link
-            className="banner-link"
-            to={
-              role === "admin"
-                ? "/students"
-                : role === "teacher"
-                  ? "/updates"
-                  : "/feed"
-            }
-          >
-            {role === "admin"
-              ? t("Meet your school community")
-              : role === "teacher"
-                ? t("Share a classroom update")
-                : t("See the latest updates")}{" "}
-            <ArrowRight size={17} />
-          </Link>
-        </div>
-        <div className="school-art" aria-hidden="true">
-          <div className="art-orbit orbit-one" />
-          <div className="art-orbit orbit-two" />
-          <div className="art-sun" />
-          <div className="art-building">
-            <i />
-            <i />
-            <i />
-            <b />
-            <span />
-          </div>
-          <div className="art-tree tree-one" />
-          <div className="art-tree tree-two" />
-          <div className="art-ground" />
-          <div className="art-note">
-            <CheckCircle2 size={17} />
-            <span>{t("A community that grows together")}</span>
-          </div>
-        </div>
-      </section>
+      <WorkspaceWelcome role={role} name={name} />
       <div className="stats-grid">
         {cards.map((c) => (
           <Link key={c.name} to={`/${c.to}`} className="stat-card">

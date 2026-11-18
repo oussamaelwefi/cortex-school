@@ -14,6 +14,11 @@ SchoolTimezone = Annotated[
 ]
 
 
+class SchoolContextResponse(CustomBaseModel):
+    organization_id: str
+    name: str | None = None
+
+
 class SchoolAttendanceSettingsRequest(CustomBaseModel):
     timezone: SchoolTimezone
     instructional_weekdays: list[int] = Field(min_length=1, max_length=7)
