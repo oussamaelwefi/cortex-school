@@ -33,6 +33,12 @@ Applicants choose **Register your school** on the Cortex sign-in page, verify th
 
 For Railway, apply `alembic upgrade head` on the backend database and deploy the frontend, API, Celery worker, and Celery Beat scheduler from the same revision. Configure `WORKOS_API_KEY` for the API and worker using the Cortex WorkOS environment. In that environment, make sure AuthKit permits applicants to sign up, and that `school_admin` has `school:manage`. The form lists countries configured in the operator console under **Countries**.
 
+## Invitation status webhooks
+
+In the WorkOS Dashboard, open **Webhooks** in the same environment that sends your invitations. Add or update the endpoint to `https://YOUR-BACKEND-DOMAIN/api/webhooks/workos/` and subscribe to `invitation.accepted`. You can also subscribe to `invitation.revoked` and `invitation.resent` to keep revocations and resent invitation expiry dates in sync.
+
+Copy the endpoint's signing secret into the Railway **backend** service variable `WORKOS_WEBHOOK_SECRET` and deploy the backend. After a recipient accepts a Cortex invitation, refresh the **Invitations** page to see **Accepted** under **Invitation status**. **Send status** tracks email delivery separately. To confirm delivery, check the event's response in the WorkOS webhook log. Previously accepted invitations require replay of their acceptance events or a separate backfill.
+
 ## Local Docker runtime for this checkout
 
 The local stack uses `docker/docker-compose.local.yml`. It builds the API,

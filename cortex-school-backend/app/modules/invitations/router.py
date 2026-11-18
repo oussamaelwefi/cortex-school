@@ -215,11 +215,13 @@ async def retry_invitation(
     session: AsyncSession = Depends(db_session),
     current_user: dict = Depends(get_current_user),
 ):
-    try:
-        invitation = await get_invitation(session, invitation_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    invitation = await session.get(Invitation, invitation_id, with_for_update=True)
+    if invitation is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
     _ensure_same_organization(invitation.organization_id, current_user)
+
+    if invitation.workos_state == "accepted":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This invitation has already been accepted.")
 
     if invitation.send_status in {
         InvitationSendStatus.QUEUED,

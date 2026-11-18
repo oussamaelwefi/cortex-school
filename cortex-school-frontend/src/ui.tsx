@@ -535,9 +535,11 @@ export function DataView({
     ? bind(endpoint, selected, context)
     : context;
   const schoolRegistrations = endpoint.id === "list_school_registration_requests";
+  const invitationTable = endpoint.id === "list_invitations";
   const allowed = endpoints.filter(
     (x) =>
       x.module !== "reminders" &&
+      (x.id !== "retry_invitation" || (selected || data)?.workos_state !== "accepted") &&
       (!schoolRegistrations || x.module !== "student_registration" || selected?.status === "pending") &&
       (x.role === endpoint.role || x.role === "shared") &&
       x.params.filter((p) => p.in === "path").length > 0 &&
@@ -548,7 +550,7 @@ export function DataView({
   );
   if (array) {
     if (!array.length) return <Empty />;
-    const preferred = [
+    const preferred = invitationTable ? ["first_name", "last_name", "email", "role_slug", "send_status", "workos_state"] : [
       "first_name",
       "last_name",
       "child_first_name",
@@ -598,7 +600,7 @@ export function DataView({
               <tr>
                 {keys.map((k) => (
                   <th key={k}>
-                    {k === "guardian_name" ? t("Requested by") : label(k)}
+                    {k === "guardian_name" ? t("Requested by") : k === "workos_state" ? t("Invitation status") : label(k)}
                   </th>
                 ))}
                 {hasStudentGuardians && <th>{t("Guardians")}</th>}
@@ -636,6 +638,8 @@ export function DataView({
                             <Badge key={role} value={role} />
                           ))}
                         </div>
+                      ) : k === "workos_state" ? (
+                        row[k] ? <Badge value={row[k]} /> : display(row[k])
                       ) : /status|severity|role_slug/.test(k) ? (
                         <Badge value={row[k]} />
                       ) : (
