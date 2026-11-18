@@ -378,6 +378,12 @@ export function Operation({
                   value={body}
                   onChange={setBody}
                   choices={choices}
+                  variantLabels={
+                    e.id === "approve_school_registration_request" ? {
+                      existing: "Use an existing student record",
+                      create: "Create a new student record",
+                    } : undefined
+                  }
                 />
               ) : (
                 e.body && (

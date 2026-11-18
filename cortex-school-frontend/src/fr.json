@@ -1093,5 +1093,7 @@
   "Academic year published": "Année scolaire activée",
   "Academic year closed": "Année scolaire clôturée",
   "Calendar event deleted": "Événement supprimé du calendrier",
-  "Cancel": "Annuler"
+  "Cancel": "Annuler",
+  "Use an existing student record": "Rattacher à un dossier élève existant",
+  "Create a new student record": "Créer un nouveau dossier élève"
 }

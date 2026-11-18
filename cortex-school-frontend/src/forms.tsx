@@ -18,12 +18,14 @@ export function Field({
   value,
   onChange,
   choices = {},
+  variantLabels,
 }: {
   name: string;
   schema: Schema;
   value: any;
   onChange: (v: any) => void;
   choices?: Choices;
+  variantLabels?: Record<string, string>;
 }) {
   if (s.oneOf) {
     const key = s.discriminator || "type";
@@ -33,6 +35,7 @@ export function Field({
         x.properties?.[key]?.enum?.includes(value?.[key]),
       ),
     );
+    const variant = s.oneOf[index];
     return (
       <fieldset>
         <legend>{label(name)}</legend>
@@ -41,21 +44,37 @@ export function Field({
           value={index}
           onChange={(e) => onChange(initialValue(s.oneOf![+e.target.value]))}
         >
-          {s.oneOf.map((x, i) => (
-            <option key={i} value={i}>
-              {label(
-                x.properties?.[key]?.enum?.[0] || x.name || `Option ${i + 1}`,
-              )}
-            </option>
-          ))}
+          {s.oneOf.map((x, i) => {
+            const option =
+              x.properties?.[key]?.enum?.[0] || x.name || `Option ${i + 1}`;
+            return (
+              <option key={i} value={i}>
+                {variantLabels?.[option]
+                  ? t(variantLabels[option])
+                  : label(String(option))}
+              </option>
+            );
+          })}
         </select>
-        <Field
-          name={name}
-          schema={s.oneOf[index]}
-          value={value}
-          onChange={onChange}
-          choices={choices}
-        />
+        {variant.type === "object" ? (
+          <div className="form-grid">
+            {Object.entries(variant.properties || {})
+              // The selector already chooses this literal; keep it in the payload only.
+              .filter(([field, property]) => field !== key || property.enum?.length !== 1)
+              .map(([field, property]) => (
+                <Field
+                  key={field}
+                  name={field}
+                  schema={property}
+                  value={value?.[field]}
+                  onChange={(next) => onChange({ ...value, [field]: next })}
+                  choices={choices}
+                />
+              ))}
+          </div>
+        ) : (
+          <Field name={name} schema={variant} value={value} onChange={onChange} choices={choices} />
+        )}
       </fieldset>
     );
   }
