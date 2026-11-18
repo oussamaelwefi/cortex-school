@@ -138,7 +138,7 @@ for path,tree in trees.items():
                 kw = keywords(default) if isinstance(default,ast.Call) else {}
                 info.update({'name':kw.get('alias') or arg.arg,'in':'path' if '{'+arg.arg+'}' in url else 'query','required':default is None,'default':kw.get('default',literal(default))})
                 params.append(info)
-            role = 'guardian' if url.startswith('/guardian') else 'teacher' if url.startswith('/teacher') or url=='/ai/teacher-update-draft/' else 'shared' if url=='/ai/chat/' else 'admin'
+            role = 'onboarding' if module == 'onboarding' and not url.endswith(('/approve', '/reject')) else 'operator' if module == 'onboarding' else 'guardian' if url.startswith('/guardian') else 'teacher' if url.startswith('/teacher') or url=='/ai/teacher-update-draft/' else 'shared' if url=='/ai/chat/' else 'admin'
             routes.append({'id':n.name,'title':n.name.replace('_',' ').capitalize(),'method':d.func.attr.upper(),'path':url,'module':module,'role':role,'params':params,'body':body,'upload':upload})
 target = Path(__file__).resolve().parents[1]/'src/contracts.json'
 target.write_text(json.dumps(routes,indent=2),encoding='utf-8')

@@ -1542,6 +1542,117 @@
     "upload": false
   },
   {
+    "id": "onboarding_countries",
+    "title": "Onboarding countries",
+    "method": "GET",
+    "path": "/school-requests/countries",
+    "module": "onboarding",
+    "role": "onboarding",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "my_school_requests",
+    "title": "My school requests",
+    "method": "GET",
+    "path": "/school-requests/mine",
+    "module": "onboarding",
+    "role": "onboarding",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "request_school",
+    "title": "Request school",
+    "method": "POST",
+    "path": "/school-requests/",
+    "module": "onboarding",
+    "role": "onboarding",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "school_name": {
+          "type": "string",
+          "required": true,
+          "min_length": 2,
+          "max_length": 255
+        },
+        "country_code": {
+          "type": "string",
+          "required": true
+        },
+        "timezone": {
+          "type": "string",
+          "required": true,
+          "min_length": 1,
+          "max_length": 64
+        },
+        "notes": {
+          "type": "string",
+          "required": false,
+          "max_length": 2000,
+          "default": ""
+        }
+      },
+      "name": "SchoolRequestCreate"
+    },
+    "upload": false
+  },
+  {
+    "id": "approve_school_request",
+    "title": "Approve school request",
+    "method": "POST",
+    "path": "/school-requests/{request_id}/approve",
+    "module": "onboarding",
+    "role": "operator",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "reject_school_request",
+    "title": "Reject school request",
+    "method": "POST",
+    "path": "/school-requests/{request_id}/reject",
+    "module": "onboarding",
+    "role": "operator",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "required": true,
+          "min_length": 1,
+          "max_length": 1000
+        }
+      },
+      "name": "SchoolRequestRejection"
+    },
+    "upload": false
+  },
+  {
     "id": "get_school_policies",
     "title": "Get school policies",
     "method": "GET",

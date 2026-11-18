@@ -1,0 +1,73 @@
+{% extends "sqladmin/layout.html" %}
+{% block content %}
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <form class="d-flex gap-2 flex-wrap w-100" method="GET">
+        <label class="form-label mb-0">Status
+          <select name="status" class="form-select" aria-label="Request status">
+            {% for value in statuses %}<option value="{{ value.value }}" {% if status == value.value %}selected{% endif %}>{{ value.value|capitalize }}</option>{% endfor %}
+            <option value="all" {% if status == 'all' %}selected{% endif %}>All requests</option>
+          </select>
+        </label>
+        <label class="form-label mb-0 flex-grow-1">School or requester email
+          <input class="form-control" name="search" value="{{ search }}" placeholder="Search school requests">
+        </label>
+        <button class="btn btn-primary align-self-end" type="submit">Apply filters / Refresh</button>
+      </form>
+    </div>
+    {% if error %}<div class="alert alert-danger m-3" role="alert">{{ error }}</div>{% endif %}
+    <div class="card-body text-secondary">
+      Approval creates a separate WorkOS organization and gives the verified requester the school_admin role.
+      Provisioning runs in the background. Refresh to see progress; failed requests can be retried.
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead><tr><th>School</th><th>Requester</th><th>Status</th><th>Review</th></tr></thead>
+        <tbody>
+          {% for item in requests %}
+          <tr>
+            <td>
+              <strong>{{ item.school_name }}</strong>
+              <div class="text-secondary">{{ item.country_code }} · {{ item.timezone }}</div>
+              <small class="text-secondary">Requested {{ item.created_at.strftime('%d %b %Y, %H:%M UTC') }}</small>
+              {% if item.notes %}<details class="mt-2"><summary>Request details</summary><p style="white-space:pre-wrap">{{ item.notes }}</p></details>{% endif %}
+              {% if item.organization_id %}<div class="small text-secondary mt-2">Organization: {{ item.organization_id }}</div>{% endif %}
+            </td>
+            <td><div>{{ item.requester_name }}</div><div class="text-secondary">{{ item.requester_email }}</div></td>
+            <td>
+              <span class="badge {% if item.status == 'approved' %}bg-green-lt{% elif item.status in ['failed', 'rejected'] %}bg-red-lt{% else %}bg-yellow-lt{% endif %}">{{ item.status|capitalize }}</span>
+              {% if item.last_error %}<p class="small text-danger mt-2">{{ item.last_error }}</p>{% endif %}
+              {% if item.rejection_reason %}<p class="small text-secondary mt-2">{{ item.rejection_reason }}</p>{% endif %}
+              {% if item.reviewed_by %}<details class="small mt-2"><summary>Review history</summary><div>{{ item.reviewed_by }}</div><div>{{ item.reviewed_at.strftime('%d %b %Y, %H:%M UTC') }}</div><div>Provisioning attempts: {{ item.attempt_count }}</div></details>{% endif %}
+            </td>
+            <td>
+              {% if item.status in ['pending', 'failed'] %}
+              <form method="POST">
+                <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="request_id" value="{{ item.id }}">
+                <button class="btn btn-primary" name="decision" value="approve" type="submit">{% if item.status == 'failed' %}Retry provisioning{% else %}Approve school{% endif %}</button>
+              </form>
+              {% endif %}
+              {% if item.status == 'pending' %}
+              <details class="mt-2"><summary>Reject request</summary>
+                <form method="POST" class="mt-2">
+                  <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="request_id" value="{{ item.id }}">
+                  <label class="form-label">Reason shown to requester<textarea name="reason" class="form-control" required maxlength="1000"></textarea></label>
+                  <button class="btn btn-danger" name="decision" value="reject" type="submit">Reject request</button>
+                </form>
+              </details>
+              {% elif item.status == 'provisioning' %}<span class="text-secondary">Setting up school…</span>
+              {% elif item.status == 'approved' %}<span class="text-success">School ready</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}<tr><td colspan="4" class="text-center text-secondary py-5">No school requests match these filters.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      {% if offset > 0 %}<a class="btn" href="{{ request.url.include_query_params(offset=[0, offset - 50]|max) }}">Previous</a>{% else %}<span></span>{% endif %}
+      {% if has_next %}<a class="btn" href="{{ request.url.include_query_params(offset=offset + 50) }}">Next</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

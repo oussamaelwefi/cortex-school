@@ -12,8 +12,8 @@ const routes = JSON.parse(
   readFileSync(new URL("../src/contracts.json", import.meta.url), "utf8"),
 );
 const find = (id) => routes.find((x) => x.id === id);
-test("contracts contain 109 unique business routes and all backend modules", () => {
-  assert.equal(routes.length, 109);
+test("contracts contain 114 unique business routes and all backend modules", () => {
+  assert.equal(routes.length, 114);
   assert.equal(
     new Set(routes.map((e) => e.method + e.path)).size,
     routes.length,
@@ -29,6 +29,7 @@ test("contracts contain 109 unique business routes and all backend modules", () 
     "invitations",
     "members",
     "needs_review",
+    "onboarding",
     "reminders",
     "schools",
     "students",

@@ -31,6 +31,7 @@ from modules.invitations.services import (
 )
 from modules.invitations.tasks import enqueue_invitation_task
 from modules.schools.models import Country, School
+from modules.onboarding.admin import SchoolRequestsAdmin
 
 
 class AdminAuth(AuthenticationBackend):
@@ -366,6 +367,7 @@ def setup_admin(app) -> None:
         authentication_backend=AdminAuth(),
         templates_dir=str(settings.ROOT_PATH / "templates"),
     )
+    admin.add_base_view(SchoolRequestsAdmin)
     admin.add_view(InvitationAdmin)
     admin.add_view(CountryAdmin)
     admin.add_view(SchoolAdmin)

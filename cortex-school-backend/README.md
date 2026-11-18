@@ -27,6 +27,12 @@ The callback URL is inferred from the request. If a reverse proxy reports a diff
 
 After signing in, `/api/docs` is available in the same browser session. The console session expires with the verified WorkOS access token; use the sign-in button again when needed. API documentation also accepts a current operator bearer token.
 
+## New school onboarding
+
+Applicants choose **Register your school** on the Cortex sign-in page, verify their WorkOS email, and submit a school request. Platform operators review requests under **School requests** in the operator console. Approval queues a worker to create the WorkOS organization, link its ID to a Cortex school, and assign the original requester the `school_admin` membership. The requester checks the result and opens the new workspace from their request page. The console offers **Retry provisioning** for failed attempts.
+
+For Railway, apply `alembic upgrade head` on the backend database and deploy the frontend, API, Celery worker, and Celery Beat scheduler from the same revision. Configure `WORKOS_API_KEY` for the API and worker using the Cortex WorkOS environment. In that environment, make sure AuthKit permits applicants to sign up, and that `school_admin` has `school:manage`. The form lists countries configured in the operator console under **Countries**.
+
 ## Local Docker runtime for this checkout
 
 The local stack uses `docker/docker-compose.local.yml`. It builds the API,

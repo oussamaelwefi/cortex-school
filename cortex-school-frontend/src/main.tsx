@@ -71,6 +71,8 @@ import { SchoolMembersPage } from "./school-members";
 import { AcademicDirectoryPage } from "./academic-directory";
 import { StudentGuardianContext } from "./student-guardians";
 import { SchoolSettingsPage } from "./school-settings";
+import { OnboardingPage } from "./onboarding";
+import "./onboarding.css";
 import "./styles.css";
 import "./needs-review.css";
 import "./guardian-family.css";
@@ -97,14 +99,15 @@ function Brand() {
   );
 }
 function Login() {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, signUp, isLoading } = useAuth();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  async function login() {
+  async function login(createAccount = false) {
     setBusy(true);
     setError("");
     try {
-      await signIn();
+      if (createAccount) await signUp();
+      else await signIn();
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
@@ -174,7 +177,7 @@ function Login() {
           {error && <ErrorBox error={error} />}
           <button
             className="button primary login-button"
-            onClick={login}
+            onClick={() => login()}
             disabled={busy || isLoading}
           >
             {busy ? t("Connecting…") : t("Sign in to your school")}
@@ -191,6 +194,17 @@ function Login() {
               <br />
               {t(" You can create your account during secure sign-in. ")}
             </p>
+          </div>
+          <div className="login-help">
+            <strong>{t("Setting up a new school?")}</strong>
+            <p>{t("Create your account, then request a school workspace for operator approval.")}</p>
+            <button
+              className="text-button"
+              onClick={() => login(true)}
+              disabled={busy || isLoading}
+            >
+              {t("Register your school")} <ArrowRight size={15} />
+            </button>
           </div>
         </div>
         <p className="login-copyright">
@@ -270,20 +284,16 @@ function Authenticated() {
     );
   if (!claims) return <Loading />;
   const roles = rolesFromClaims(claims) as Role[];
-  if (!roles.length)
+  if (!roles.length || !claims.org_id)
     return (
-      <div className="center-page">
-        <ShieldCheck size={40} />
-        <h1>{t("Your school workspace is almost ready.")}</h1>
-        <p>
-          {t(
-            " Ask your school administrator to assign your school role and organization. ",
-          )}
-        </p>
-        <button className="button primary" onClick={() => auth.signOut()}>
-          {t(" Sign out ")}
-        </button>
-      </div>
+      <ApiContext.Provider value={api}>
+        <OnboardingPage
+          key={auth.user?.id}
+          email={auth.user?.email || ""}
+          onExit={() => auth.signOut()}
+          onEnter={(organizationId) => auth.signIn({ organizationId })}
+        />
+      </ApiContext.Provider>
     );
   return (
     <ApiContext.Provider value={api}>
