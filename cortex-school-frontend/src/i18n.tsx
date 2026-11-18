@@ -5,9 +5,9 @@ import french from "./fr.json";
 
 export type Language = "en" | "fr";
 const key = "cortex-language";
-let current: Language = "en";
+let current: Language = "fr";
 try {
-  current = localStorage.getItem(key) === "fr" ? "fr" : "en";
+  current = localStorage.getItem(key) === "en" ? "en" : "fr";
 } catch {
   /* Storage can be disabled. */
 }
@@ -54,8 +54,8 @@ export function LanguageSwitch() {
         value={language}
         onChange={(e) => setLanguage(e.target.value as Language)}
       >
-        <option value="en">English</option>
         <option value="fr">Français</option>
+        <option value="en">English</option>
       </select>
     </label>
   );

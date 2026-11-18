@@ -45,8 +45,9 @@ Role navigation follows access-token claims: administrator screens require `scho
 
 ## Features
 
-Use the English/Français selector on the login page or in the workspace header
-to change the interface language. The choice is saved in this browser. French
+The interface defaults to French. Use the Français/English selector on the login
+page or in the workspace header to change the language. The choice is saved in
+this browser and takes precedence on later visits. French
 localizes navigation, forms, workflow actions, dates, and the assistant interface;
 new assistant requests ask for French replies. Names, existing messages, and
 school records remain in their original language. WorkOS hosts its own sign-in
@@ -186,6 +187,9 @@ also checked in headless Chrome with a mocked API on desktop and mobile, includi
 role switching, dialogs, school-name fallback and responsive headers. Real API,
 database, invitations, and authentication require the running backend and configured
 WorkOS application.
+
+Component tests use an explicit English browser preference for their existing
+English-language assertions.
 
 ## Invitation acceptance
 
