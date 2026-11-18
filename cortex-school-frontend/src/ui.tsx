@@ -137,13 +137,17 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const heading = useRef(`dialog-${Math.random().toString(36).slice(2)}`);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement;
     const before = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     ref.current?.focus();
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key === "Tab") {
         const elements = ref.current?.querySelectorAll<HTMLElement>(
           'button:not(:disabled),input,select,textarea,a[href],[tabindex="0"]',
@@ -170,7 +174,7 @@ export function Modal({
       document.removeEventListener("keydown", handler);
       previous?.focus();
     };
-  }, [onClose]);
+  }, []);
   return createPortal(
     <div
       className="modal-backdrop"

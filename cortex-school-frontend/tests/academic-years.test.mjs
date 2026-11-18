@@ -209,6 +209,25 @@ test("academic year workspace", async (suite) => {
   }
 
   await suite.test(
+    "typing a year name keeps focus after every character",
+    async (t) => {
+      const { button, click, change } = await mount(t);
+      await click(button("Create academic year"));
+      const input = document.querySelector("[role='dialog'] input[type=text]");
+      input.focus();
+      for (const character of "2028-2029") {
+        await change(input, input.value + character);
+        assert.equal(
+          document.activeElement === input,
+          true,
+          "typing must not return focus to the dialog",
+        );
+      }
+      assert.equal(input.value, "2028-2029");
+    },
+  );
+
+  await suite.test(
     "a draft explains the missing period and can be published after adding one, without treating warnings as blockers",
     async (t) => {
       const { element, api, button, click, change, submit } = await mount(t);
