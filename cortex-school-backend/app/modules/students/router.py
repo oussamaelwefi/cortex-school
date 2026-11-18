@@ -20,6 +20,7 @@ from modules.students.services import (
     _get_guardian,
     _get_student,
     _require_active_guardian,
+    guardian_ids_by_student,
 )
 
 router = APIRouter(
@@ -62,7 +63,13 @@ async def list_students(
         .where(Student.organization_id == current_user.get("organization_id"))
         .order_by(Student.created_at.desc())
     )
-    return list(result.all())
+    students = list(result.all())
+    guardians = await guardian_ids_by_student(
+        session, current_user.get("organization_id"), [student.id for student in students],
+    )
+    return [StudentResponse.model_validate(student).model_copy(update={
+        "guardian_ids": guardians.get(student.id, []),
+    }) for student in students]
 
 
 @router.get("/{student_id}/", response_model=StudentResponse)
@@ -71,7 +78,9 @@ async def get_student(
     session: AsyncSession = Depends(db_session),
     current_user: dict = Depends(get_current_user),
 ):
-    return await _get_student(session, student_id, current_user)
+    student = await _get_student(session, student_id, current_user)
+    guardians = await guardian_ids_by_student(session, student.organization_id, [student.id])
+    return StudentResponse.model_validate(student).model_copy(update={"guardian_ids": guardians.get(student.id, [])})
 
 
 @router.patch("/{student_id}/", response_model=StudentResponse)
@@ -88,7 +97,8 @@ async def update_student(
         student.last_name = payload.last_name
     await session.commit()
     await session.refresh(student)
-    return student
+    guardians = await guardian_ids_by_student(session, student.organization_id, [student.id])
+    return StudentResponse.model_validate(student).model_copy(update={"guardian_ids": guardians.get(student.id, [])})
 
 
 @router.post(

@@ -14,6 +14,9 @@ import { useApi, endpoints, findEndpoint } from "./api";
 import { Field, label, type Choices } from "./forms";
 import { initialValue, cleanPayload } from "./lib.mjs";
 import type { Data, Endpoint } from "./types";
+import { InvitationCsvImport } from "./invitation-import";
+import { AISettingsValues, InstructionalDays } from "./school-settings-values";
+import { StudentGuardianContext, StudentGuardians } from "./student-guardians";
 export const ToastContext = createContext<(s: string) => void>(() => {});
 export const ChoicesContext = createContext<Choices>({});
 export function Loading() {
@@ -243,6 +246,8 @@ export function Operation({
       : undefined,
   );
   const [file, setFile] = useState<File>();
+  const [readRevision, setReadRevision] = useState(0);
+  const directAi = useRemote(e, {}, readRevision, e.id === "get_school_ai_settings");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState<any>(undefined),
@@ -323,6 +328,10 @@ export function Operation({
       setBusy(false);
     }
   }
+  if (e.id === "upload_invitations")
+    return <InvitationCsvImport onClose={onClose} onDone={onDone} />;
+  if (e.id === "get_school_ai_settings")
+    return <Modal title="AI settings" onClose={onClose} wide><div className="modal-body">{directAi.loading ? <Loading/> : directAi.error ? <ErrorBox error={directAi.error} retry={() => setReadRevision((value) => value + 1)}/> : directAi.data && <AISettingsValues settings={directAi.data}/>}</div><footer><button className="button primary" onClick={onClose}>{t("Close")}</button></footer></Modal>;
   return (
     <Modal
       title={e.title}
@@ -504,9 +513,12 @@ export function DataView({
 }) {
   const [selectedRow, setSelected] = useState<Data | null>(null),
     [op, setOp] = useState<Endpoint | null>(null);
+  const studentGuardians = useContext(StudentGuardianContext);
   if (data === null || data === undefined) return <Empty />;
   if (typeof data !== "object") return <p className="prose">{display(data)}</p>;
   const array = Array.isArray(data) ? data : null;
+  const studentId = (row: Data) => row && typeof row === "object" ? row.student_id || (endpoint.path.includes("students") && row.first_name && row.last_name ? row.id : undefined) : undefined;
+  const hasStudentGuardians = studentGuardians.enabled && (array ? array.some((row) => studentId(row)) : studentId(data));
   const selected = selectedRow?.id
     ? array?.find((row) => row?.id === selectedRow.id) ?? selectedRow
     : selectedRow;
@@ -589,6 +601,7 @@ export function DataView({
                     {k === "guardian_name" ? t("Requested by") : label(k)}
                   </th>
                 ))}
+                {hasStudentGuardians && <th>{t("Guardians")}</th>}
                 <th>
                   {schoolRegistrations ? t("Actions") : <span className="sr-only">{t("Open record")}</span>}
                 </th>
@@ -630,6 +643,7 @@ export function DataView({
                       )}
                     </td>
                   ))}
+                  {hasStudentGuardians && <td>{studentId(row) && <StudentGuardians studentId={studentId(row)} guardianIds={row.guardian_ids}/>}</td>}
                   <td>
                     {rowAction?.(row)}
                     <button
@@ -696,7 +710,7 @@ export function DataView({
     ([, v]) => typeof v !== "object" || v === null,
   );
   const nested = Object.entries(data).filter(
-    ([, v]) => v !== null && typeof v === "object",
+    ([key, v]) => key !== "guardian_ids" && v !== null && typeof v === "object",
   );
   return (
     <div className="data-object">
@@ -717,19 +731,20 @@ export function DataView({
           </div>
         ))}
       </dl>
+      {hasStudentGuardians && <section className="sg-object"><h3>{t("Guardians")}</h3><StudentGuardians studentId={studentId(data)} guardianIds={data.guardian_ids} details/></section>}
       {nested.map(([k, v]) => (
         <section className="nested-section" key={k}>
           <h3>
             {label(k)}{" "}
             {Array.isArray(v) && <span className="count">{v.length}</span>}
           </h3>
-          <DataView
+          {k === "instructional_weekdays" ? <InstructionalDays days={v as number[]}/> : <DataView
             data={v}
             endpoint={nestedEndpoint(endpoint, k)}
             context={bind(endpoint, data, context)}
             onChanged={onChanged}
             rowAction={rowAction}
-          />
+          />}
         </section>
       ))}
     </div>

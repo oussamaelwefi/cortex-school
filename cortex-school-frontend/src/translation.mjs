@@ -4,6 +4,9 @@ export function translate(value, language, dictionary) {
   if (dictionary[trimmed]) return value.replace(trimmed, dictionary[trimmed]);
   const tr = (text) => translate(text, language, dictionary);
   const patterns = [
+    [/^Row (\d+) must include a role_slug in mixed mode\.$/, (m) => `La ligne ${m[1]} doit indiquer un role_slug pour un import mixte.`],
+    [/^Row (\d+) has an invalid role_slug\. Use one of: (.+)$/, (m) => `Le role_slug de la ligne ${m[1]} est invalide. Valeurs acceptées : ${m[2]}`],
+    [/^(.+) already has a queued or sent invitation with a different role\.$/, (m) => `${m[1]} a déjà une invitation en attente d’envoi ou envoyée avec un autre rôle.`],
     [/^Acknowledgement overdue for (.+)$/, (m) => `Accusé de réception en retard pour ${m[1]}`],
     [/^(.+) attendance is missing$/, (m) => `Présence non transmise pour ${m[1]}`],
     [/^(.+) needs a teacher assignment$/, (m) => `Un enseignant doit être affecté à ${m[1]}`],

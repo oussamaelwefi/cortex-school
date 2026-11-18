@@ -1,0 +1,489 @@
+.ad-year-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 23px;
+  padding: 14px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.ad-year-bar > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #57724a;
+}
+.ad-year-bar select {
+  min-width: 155px;
+  padding: 8px 11px;
+  font-size: 12px;
+  color: #3c5e3d;
+}
+.ad-roster-date {
+  margin-inline-start: auto;
+  color: #6c7d63;
+  font-size: 11px;
+}
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 23px;
+}
+.ad-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 18px 21px;
+  background: #fff;
+}
+.ad-stat-icon {
+  display: grid;
+  place-items: center;
+  height: 41px;
+  width: 41px;
+  flex: none;
+  color: #6e8c5c;
+  background: #f0f4eb;
+  border-radius: 11px;
+}
+.ad-stats strong {
+  display: block;
+  font:
+    700 25px "Manrope",
+    sans-serif;
+  color: #3c613b;
+}
+.ad-stats > div > div > span {
+  font-size: 11px;
+  color: #6c7d63;
+  display: block;
+  margin-top: 5px;
+}
+.ad-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  margin-bottom: 18px;
+}
+.panel.ad-results .ad-toolbar {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 11px 11px 0 0;
+  margin: 0;
+}
+.ad-toolbar input {
+  color: #3e5d42;
+  font-size: 12px;
+}
+.ad-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ad-filter-controls select {
+  color: #567049;
+  font-size: 11px;
+  padding: 9px;
+  max-width: 220px;
+}
+.ad-filter-controls > span {
+  font-size: 10px;
+  color: #708463;
+  white-space: nowrap;
+}
+.ad-class-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px;
+}
+.ad-class-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ad-class-card > header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 21px 23px;
+  border-bottom: 1px solid var(--line);
+}
+.ad-class-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 11px;
+  background: #edf3e7;
+  color: #6a8c52;
+  flex: none;
+}
+.ad-class-card h2 {
+  margin: 0 0 6px;
+  font:
+    700 21px "Manrope",
+    sans-serif;
+  color: #365b3a;
+}
+.ad-class-card > header > div > span {
+  color: #718369;
+  font-size: 11px;
+}
+.ad-card-teachers {
+  padding: 19px 23px;
+  flex: 1;
+}
+.ad-section-label {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #718266;
+}
+.ad-teachers {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 13px;
+}
+.ad-teachers li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: #7c926d;
+}
+.ad-teachers li > span:first-of-type {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.ad-teachers strong {
+  color: #486640;
+  font-size: 12px;
+  display: block;
+  font-weight: 600;
+}
+.ad-teachers small {
+  font-size: 11px;
+  color: #6f8366;
+  display: block;
+  margin-top: 4px;
+}
+.ad-teacher-role {
+  font-size: 10px;
+  color: #77886e;
+  background: #f5f7ef;
+  padding: 4px 7px;
+  border-radius: 4px;
+}
+.ad-class-card > footer {
+  padding: 15px 23px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.ad-class-card > footer > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6e835e;
+  font-size: 11px;
+}
+.ad-muted {
+  font-size: 11px;
+  color: #718267;
+  line-height: 1.7;
+}
+.ad-table td {
+  padding: 19px 22px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.ad-table th {
+  color: #718366;
+  padding: 13px 22px;
+  font-size: 10px;
+}
+.ad-table .record-button,
+.ad-student-link {
+  font-size: 12px;
+  color: #40613c;
+  text-decoration: none;
+  font-weight: 650;
+}
+.ad-student-link:hover {
+  text-decoration: underline;
+}
+.ad-class-link {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: #5b7b49;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.ad-class-link:hover {
+  text-decoration: underline;
+}
+.ad-attendance {
+  min-width: 120px;
+  max-width: 225px;
+}
+.ad-attendance > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  justify-content: space-between;
+}
+.ad-attendance strong {
+  font-size: 15px;
+  color: #456c39;
+}
+.ad-attendance :is(small, div > span) {
+  color: #6e8364;
+  font-size: 10px;
+}
+.ad-attendance small {
+  display: block;
+  margin-top: 5px;
+}
+.ad-rate-track {
+  display: block;
+  height: 4px;
+  width: 100%;
+  border-radius: 5px;
+  background: #eaf0e3;
+  overflow: hidden;
+  margin-top: 7px;
+}
+.ad-rate-track > span {
+  height: 100%;
+  display: block;
+  border-radius: 5px;
+  background: #8aa975;
+}
+.ad-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  color: #718267;
+  font-size: 11px;
+  gap: 15px;
+}
+.panel.ad-results > .ad-pagination {
+  border-top: 1px solid var(--line);
+}
+.ad-pagination > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ad-pagination .icon-button {
+  height: 28px;
+  width: 28px;
+}
+.ad-attendance-note {
+  font-size: 11px;
+  color: #718267;
+  line-height: 1.8;
+  margin-top: 20px;
+}
+.ad-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 24px 0 15px;
+}
+.ad-detail-heading:first-child {
+  margin-top: 0;
+}
+.ad-detail-heading h3 {
+  font-size: 15px;
+  color: #3f6339;
+  margin: 0;
+}
+.ad-detail-heading h3 > span {
+  font-size: 11px;
+  color: #7b8e6e;
+  margin-inline-start: 6px;
+}
+.ad-class-detail .ad-table {
+  margin: 0 -28px;
+}
+.ad-student-class {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f6f8f1;
+  padding: 17px;
+  border: 1px solid #e7edde;
+  border-radius: 10px;
+  color: #688555;
+  margin-bottom: 23px;
+}
+.ad-student-class > div {
+  display: grid;
+  gap: 8px;
+}
+.ad-student-class > div > span {
+  font-size: 10px;
+  color: #708264;
+}
+.ad-student-class strong {
+  font-size: 13px;
+  color: #5f7651;
+}
+.ad-student-detail h3 {
+  font-size: 15px;
+  color: #45673c;
+}
+.ad-student-detail .ad-attendance {
+  max-width: none;
+}
+.ad-student-detail .ad-attendance strong {
+  font:
+    700 29px "Manrope",
+    sans-serif;
+}
+.ad-status-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 22px 0;
+}
+.ad-status-counts > div {
+  background: #f8faf4;
+  border: 1px solid #e7edde;
+  border-radius: 8px;
+  padding: 13px;
+}
+.ad-status-counts strong {
+  display: block;
+  color: #526f46;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.ad-workflows {
+  padding: 20px;
+  margin-bottom: 22px;
+}
+.ad-workflows h2 {
+  font-size: 16px;
+}
+.ad-workflows .record-actions {
+  margin-bottom: 0;
+}
+.ad-empty-action {
+  text-align: center;
+  padding-bottom: 27px;
+}
+.ad-data-note {
+  font-size: 12px;
+  color: #816b41;
+  padding: 13px;
+  background: #faf5e9;
+  border-radius: 8px;
+}
+@media (max-width: 1100px) {
+  .academic-directory-page .heading-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 390px;
+  }
+  .ad-class-card > header,
+  .ad-card-teachers {
+    padding: 18px;
+  }
+  .ad-teachers.compact .ad-teacher-role {
+    display: none;
+  }
+  .ad-filter-controls select {
+    max-width: 175px;
+  }
+}
+@media (max-width: 760px) {
+  .ad-class-grid {
+    grid-template-columns: 1fr;
+  }
+  .ad-stats {
+    gap: 8px;
+  }
+  .ad-stats > div {
+    padding: 13px 10px;
+    gap: 9px;
+  }
+  .ad-stat-icon {
+    display: none;
+  }
+  .ad-stats strong {
+    font-size: 23px;
+  }
+  .ad-stats > div > div > span {
+    font-size: 10px;
+  }
+  .ad-year-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+  .ad-roster-date {
+    margin: 0;
+    flex-basis: 100%;
+  }
+  .ad-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 15px;
+  }
+  .ad-toolbar > .search-input {
+    flex-basis: 100%;
+  }
+  .ad-filter-controls {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .ad-filter-controls select {
+    max-width: none;
+    min-width: 0;
+    flex: 1;
+  }
+  .ad-filter-controls > span {
+    margin-inline-start: auto;
+  }
+  .ad-table table {
+    min-width: 560px;
+  }
+  .academic-directory-page .heading-actions {
+    max-width: none;
+    justify-content: flex-start;
+  }
+  .ad-class-detail .ad-table {
+    margin: 0 -20px;
+  }
+  .ad-teacher-role {
+    max-width: 110px;
+  }
+  .ad-status-counts {
+    gap: 6px;
+  }
+  .ad-status-counts > div {
+    padding: 11px 8px;
+  }
+}

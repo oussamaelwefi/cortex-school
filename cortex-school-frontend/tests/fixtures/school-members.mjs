@@ -1,0 +1,83 @@
+export const schoolMembersFixture = [
+  {
+    id: "user_admin",
+    membership_id: "membership_admin",
+    name: "Amira Ben Salem",
+    email: "amira@example.test",
+    roles: ["school_admin"],
+    status: "active",
+  },
+  {
+    id: "user_teacher1",
+    membership_id: "membership_teacher1",
+    name: "Émilie Laurent",
+    email: "emilie@example.test",
+    roles: ["teacher"],
+    status: "active",
+    classrooms: [
+      {
+        id: "class-6a",
+        name: "6A",
+        academic_year_id: "year-current",
+        academic_year_name: "2026–2027",
+        assignment_role: "lead",
+      },
+    ],
+  },
+  {
+    id: "user_teacher2",
+    membership_id: "membership_teacher2",
+    name: "Mehdi Trabelsi",
+    email: "mehdi@example.test",
+    roles: ["teacher"],
+    status: "active",
+    classrooms: [
+      {
+        id: "class-6b",
+        name: "6B",
+        academic_year_id: "year-current",
+        academic_year_name: "2026–2027",
+        assignment_role: "lead",
+      },
+    ],
+  },
+  {
+    id: "user_teacher3",
+    membership_id: "membership_teacher3",
+    name: "Salma Mansour",
+    email: "salma@example.test",
+    roles: ["teacher", "guardian"],
+    status: "active",
+    classrooms: [
+      {
+        id: "class-6a",
+        name: "6A",
+        academic_year_id: "year-current",
+        academic_year_name: "2026–2027",
+        assignment_role: "assistant",
+      },
+    ],
+    children: [{ id: "student-4", name: "Omar Mansour" }],
+  },
+  {
+    id: "user_guardian1",
+    membership_id: "membership_guardian1",
+    name: "Nadia Ben Ali",
+    email: "nadia@example.test",
+    roles: ["guardian"],
+    status: "active",
+    children: [
+      { id: "student-1", name: "Yasmine Ben Ali" },
+      { id: "student-2", name: "Adam Trabelsi" },
+    ],
+  },
+  {
+    id: "user_guardian2",
+    membership_id: "membership_guardian2",
+    name: "Youssef Haddad",
+    email: "youssef@example.test",
+    roles: ["guardian"],
+    status: "active",
+    children: [{ id: "student-3", name: "Lina Haddad" }],
+  },
+];

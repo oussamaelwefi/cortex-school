@@ -16,6 +16,7 @@ from core.config import settings
 from core.db import SessionLocal, utcnow
 from modules.invitations.models import (
     Invitation,
+    InvitationCsvRoleMode,
     InvitationSendStatus,
     UserRoles,
 )
@@ -57,7 +58,11 @@ class InvitationCsvUpsertResult:
     updated_count: int
 
 
-def parse_invitation_csv(csv_content: str) -> list[CsvInvitation]:
+def parse_invitation_csv(
+    csv_content: str,
+    *,
+    role_mode: InvitationCsvRoleMode | None = None,
+) -> list[CsvInvitation]:
     reader = csv.DictReader(io.StringIO(csv_content))
     if not reader.fieldnames:
         raise InvitationCsvError("CSV must include a header row")
@@ -65,6 +70,8 @@ def parse_invitation_csv(csv_content: str) -> list[CsvInvitation]:
     fieldnames = [field.strip().lower() for field in reader.fieldnames if field]
     if "email" not in fieldnames:
         raise InvitationCsvError("CSV must include an email column")
+    if role_mode == InvitationCsvRoleMode.MIXED and "role_slug" not in fieldnames:
+        raise InvitationCsvError("Mixed imports require a role_slug column.")
 
     invitations: list[CsvInvitation] = []
     seen_emails: set[str] = set()
@@ -86,12 +93,21 @@ def parse_invitation_csv(csv_content: str) -> list[CsvInvitation]:
             raise InvitationCsvError(f"Row {row_number} duplicates {email}")
         seen_emails.add(email)
 
+        if role_mode is not None and role_mode != InvitationCsvRoleMode.MIXED:
+            role_slug = UserRoles(role_mode)
+        else:
+            if role_mode == InvitationCsvRoleMode.MIXED and not row.get("role_slug"):
+                raise InvitationCsvError(
+                    f"Row {row_number} must include a role_slug in mixed mode."
+                )
+            role_slug = _parse_optional_user_role(row.get("role_slug"), row_number)
+
         invitations.append(
             CsvInvitation(
                 email=email,
                 first_name=row.get("first_name") or None,
                 last_name=row.get("last_name") or None,
-                role_slug=_parse_optional_user_role(row.get("role_slug"), row_number),
+                role_slug=role_slug,
             )
         )
 
@@ -107,13 +123,26 @@ async def create_invitations_from_csv(
     csv_content: str,
     organization_id: str,
     created_by_user_id: str | None,
+    role_mode: InvitationCsvRoleMode | None = None,
 ) -> InvitationCsvUpsertResult:
-    csv_invitations = parse_invitation_csv(csv_content)
+    csv_invitations = parse_invitation_csv(csv_content, role_mode=role_mode)
     existing_by_email = await _get_existing_invitations(
         session,
         organization_id=organization_id,
         emails=[invitation.email for invitation in csv_invitations],
     )
+
+    # Validate the entire batch before changing records. A worker must not see
+    # a queued invitation's role change underneath it, nor should sent roles
+    # diverge from the role already handed to WorkOS.
+    for row in csv_invitations:
+        existing = existing_by_email.get(row.email)
+        if existing is not None and not should_enqueue_invitation(existing) and (
+            existing.role_slug or UserRoles.GUARDIAN
+        ) != row.role_slug:
+            raise InvitationCsvError(
+                f"{row.email} already has a queued or sent invitation with a different role."
+            )
 
     invitations: list[Invitation] = []
     created_count = 0
@@ -130,6 +159,9 @@ async def create_invitations_from_csv(
             session.add(invitation)
             created_count += 1
         else:
+            if not should_enqueue_invitation(invitation):
+                invitations.append(invitation)
+                continue
             updated_count += 1
 
         invitation.created_by_user_id = created_by_user_id

@@ -551,7 +551,7 @@ export function GuardianNotifications({ data, onChanged }: { data: Data[]; onCha
         </article>
       ))}
       {selected && (
-        <NotificationUpdate
+        <GuardianUpdateDialog
           notification={selected}
           onClose={() => setSelected(null)}
           onAcknowledged={() => { setSelected(null); onChanged(); }}
@@ -561,7 +561,7 @@ export function GuardianNotifications({ data, onChanged }: { data: Data[]; onCha
   );
 }
 
-function NotificationUpdate({ notification, onClose, onAcknowledged }: {
+export function GuardianUpdateDialog({ notification, onClose, onAcknowledged }: {
   notification: Data;
   onClose: () => void;
   onAcknowledged: () => void;

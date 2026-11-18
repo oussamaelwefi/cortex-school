@@ -734,6 +734,26 @@
     "upload": false
   },
   {
+    "id": "get_academic_year_directory",
+    "title": "Get academic year directory",
+    "method": "GET",
+    "path": "/academic-years/{year_id}/directory/",
+    "module": "classrooms",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "year_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
     "id": "get_classroom",
     "title": "Get classroom",
     "method": "GET",
@@ -1343,7 +1363,21 @@
     "path": "/invitations/upload/",
     "module": "invitations",
     "role": "admin",
-    "params": [],
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "school_admin",
+          "teacher",
+          "guardian",
+          "mixed"
+        ],
+        "name": "role_mode",
+        "in": "query",
+        "required": false,
+        "default": "mixed"
+      }
+    ],
     "body": null,
     "upload": true
   },

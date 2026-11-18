@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from pydantic import StringConstraints
+from pydantic import Field, StringConstraints
 
 from core.pydantic import CustomBaseModel
 
@@ -31,6 +31,7 @@ class StudentResponse(CustomBaseModel):
     organization_id: str
     first_name: str
     last_name: str
+    guardian_ids: list[str] = Field(default_factory=list)
 
 
 class GuardianCreateRequest(CustomBaseModel):

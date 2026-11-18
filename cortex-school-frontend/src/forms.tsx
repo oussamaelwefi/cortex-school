@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type { Schema, Data } from "./types";
 import { initialValue } from "./lib.mjs";
+import { instructionalDays } from "./school-settings-values";
 export const label = (s: string) =>
   t(
     s
@@ -76,6 +77,8 @@ export function Field({
         </div>
       </fieldset>
     );
+  if (s.type === "array" && name === "instructional_weekdays")
+    return <fieldset><legend>{t("Instructional days")}{s.required ? " *" : ""}</legend><p className="ss-help">{t("Choose the days when classes normally take place.")}</p><div className="ss-weekday-field">{instructionalDays.map((day, index) => <label key={day}><input type="checkbox" checked={(value ?? []).includes(index)} onChange={(event) => onChange(event.target.checked ? [...(value ?? []), index].sort((a,b) => a-b) : (value ?? []).filter((entry: number) => entry !== index))}/>{t(day)}</label>)}</div></fieldset>;
   if (s.type === "array")
     return (
       <fieldset>

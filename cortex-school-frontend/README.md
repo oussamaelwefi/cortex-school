@@ -64,9 +64,63 @@ and pagination. Each issue keeps its context, deadline, and next action together
 invitation, and attendance details open directly from their queue items;
 acknowledgements link to the reminder review.
 
+Guardians have one **My children** workspace at `/family`; the former `/students`
+page redirects there. Each child’s card shows their current class and academic
+year, today’s attendance, the last 30 days of attendance, school updates, and an
+enrollment-history dialog. The attendance rate is `(present + late) / recorded
+school days`; unsubmitted days are excluded and an empty history shows no rate.
+The guardian overview uses the same child cards. Attendance is available inside
+**My children**; the former `/attendance` page redirects there. Registration
+requests remain in their own workspace.
+
 Open a record to see related actions with its identifiers prefilled. Each feature's **All workflows** panel exposes its remaining backend operations as typed forms. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
 
-Invitation import accepts UTF-8 **CSV**, with columns `email,first_name,last_name,role_slug`; valid roles are `school_admin`, `teacher`, and `guardian`.
+Administrators can use **Invitations → Import CSV** and choose one of four import
+types: administrators, teachers, guardians, or mixed roles. The first three apply
+the selected role to everyone, overriding any `role_slug` values in the file.
+These files require `email`; `first_name` and `last_name` are optional. Mixed files
+also require `role_slug` on every row: `school_admin`, `teacher`, or `guardian`.
+Save files as UTF-8 **CSV**. The server validates the complete file before saving
+and queues invitations automatically for the Celery worker. The result shows
+queued, skipped, and failed counts. Existing queued or sent invitations are
+skipped when the role matches; conflicting roles reject the import.
+
+The administrator’s **School members** directory separates administrators,
+teachers, and guardians with role selectors and school-wide counts. Choose a
+group, search by name or email, sort by name, and export the current results to
+CSV. People with several roles appear in each relevant group. The directory uses
+active school memberships; pending invitations remain in **Invitations**. It
+reuses the workspace’s member list, and its refresh updates that list without
+reloading unrelated school data.
+
+Administrators have dedicated **Classrooms** and **Students** directories with
+an academic-year selector. Classroom cards show the teaching team and roster
+count; **View class** opens teachers and students together. Student rows show
+their class, an attendance rate, and a direct class link. Student details retain
+editing, guardian linking, enrollment, and enrollment history. Existing class
+and student operations remain available in **All workflows**.
+
+Rates cover submitted records from the selected year’s start through today
+(or the year’s end for historical years). Present and late days count as attended;
+all recorded statuses count in the denominator, and missing records are excluded.
+Transfers count each student/date once, using its latest record. No history shows
+an unset rate. Roster membership uses exclusive placement/assignment end dates,
+as of today clamped to the selected year’s dates; the date is shown on screen.
+The year directory is one organization-scoped API request for all classes and
+students, rather than separate attendance or roster requests per child.
+
+Admin student lists, classroom rosters, and student details show linked guardian
+names. The workspace reuses its school-member directory to resolve identities;
+missing profiles and failed lookups are distinguished from students with no
+linked guardian. School-member teacher rows link to current classes in active
+academic years, and guardian rows link to their children. Search also matches
+these class and child names, and member CSV exports include both relationships.
+
+**School settings** displays every weekday by name, with instructional and
+non-instructional days clearly marked. The editor uses named weekday checkboxes
+while retaining the API’s Monday=0 through Sunday=6 values. **View AI settings**
+fetches and displays feature status and default language immediately, including
+when opened through a workflow dialog; it does not require a second Run action.
 
 Administrators can upload a PDF from **School settings → School policies**. Choose a PDF with selectable text, up to 10 MB and 100 pages. The policy library uses the filename as its title and indexes extracted text with page references. Use **Paste text** to add policy text directly.
 

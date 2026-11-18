@@ -15,6 +15,7 @@ from modules.academic_years.services import (
     _get_academic_year,
 )
 from modules.classrooms.models import ClassEnrollment, Classroom, TeacherAssignment
+from modules.classrooms.directory import get_school_directory
 from modules.classrooms.schemas import (
     ClassEnrollmentCreateRequest,
     ClassEnrollmentResponse,
@@ -24,6 +25,7 @@ from modules.classrooms.schemas import (
     TeacherAssignmentCreateRequest,
     TeacherAssignmentEndRequest,
     TeacherAssignmentResponse,
+    SchoolDirectoryResponse,
 )
 from modules.classrooms.services import (
     _find_overlapping_placement,
@@ -94,6 +96,15 @@ async def list_classrooms(
         .order_by(Classroom.name)
     )
     return list(result.all())
+
+
+@router.get("/academic-years/{year_id}/directory/", response_model=SchoolDirectoryResponse)
+async def get_academic_year_directory(
+    year_id: uuid.UUID,
+    session: AsyncSession = Depends(db_session),
+    current_user: dict = Depends(get_current_user),
+):
+    return await get_school_directory(session, year_id, current_user)
 
 
 @router.get("/classrooms/{classroom_id}/", response_model=ClassroomResponse)

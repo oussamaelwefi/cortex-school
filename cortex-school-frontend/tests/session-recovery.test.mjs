@@ -28,6 +28,21 @@ test("school API session recovery", async (suite) => {
   const chat = findEndpoint("POST", "/ai/chat/");
   const policy = findEndpoint("GET", "/guardian/family/policies/{document_id}/pdf/");
 
+  await suite.test("invitation import sends the role mode alongside the multipart CSV", async (t) => {
+    const fetch = t.mock.method(globalThis, "fetch", async () => Response.json({ queued_count: 1 }, { status: 202 }));
+    const api = makeApi(async () => "valid", t.mock.fn());
+    const file = new File(["email\nperson@example.com\n"], "people.csv", { type: "text/csv" });
+    const upload = findEndpoint("POST", "/invitations/upload/");
+    for (const role_mode of ["school_admin", "teacher", "guardian", "mixed"]) {
+      await api(upload, { role_mode }, undefined, file);
+      const [url, options] = fetch.mock.calls.at(-1).arguments;
+      assert.equal(url, `/api/invitations/upload/?role_mode=${role_mode}`);
+      assert.equal(options.method, "POST");
+      assert.equal(options.body.get("file"), file);
+      assert.equal(options.headers["Content-Type"], undefined, "fetch supplies the multipart boundary");
+    }
+  });
+
   await suite.test("policy downloads return the original PDF bytes", async (t) => {
     const bytes = new TextEncoder().encode("%PDF-1.7");
     t.mock.method(globalThis, "fetch", async () =>

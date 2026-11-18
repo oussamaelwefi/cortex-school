@@ -2,14 +2,17 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from pydantic import StringConstraints
+from sqlalchemy.ext.asyncio import AsyncSession
 from core.auth import Permission, get_current_user, require_permission
 from core.config import settings
+from core.db import db_session
 from core.router import APIRouter
 from modules.members.schemas import MemberSummaryResponse, SchoolMemberResponse
 from modules.members.services import (
     MemberLookupUnavailable,
     load_member_summaries,
     list_school_members,
+    enrich_member_relationships,
 )
 
 WorkOSUserId = Annotated[
@@ -25,12 +28,16 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[SchoolMemberResponse])
-async def get_school_members(current_user: dict = Depends(get_current_user)):
+async def get_school_members(
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(db_session),
+):
     organization_id = current_user.get("organization_id")
     if not organization_id:
         raise HTTPException(status_code=400, detail="Authenticated user must belong to an organization")
     try:
-        return await list_school_members(organization_id)
+        members = await list_school_members(organization_id)
+        return await enrich_member_relationships(session, organization_id, members)
     except MemberLookupUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

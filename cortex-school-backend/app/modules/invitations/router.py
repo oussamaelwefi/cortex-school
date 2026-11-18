@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import Depends, File, HTTPException, UploadFile, status
+from fastapi import Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.auth import Permission, get_current_user, require_permission
 from core.db import db_session
 from core.router import APIRouter
-from modules.invitations.models import Invitation, InvitationSendStatus
+from modules.invitations.models import (
+    Invitation,
+    InvitationCsvRoleMode,
+    InvitationSendStatus,
+)
 from modules.invitations.schemas import (
     InvitationCreateRequest,
     InvitationResponse,
@@ -111,6 +115,7 @@ async def create_invitation(
 )
 async def upload_invitations(
     file: UploadFile = File(...),
+    role_mode: InvitationCsvRoleMode = Query(default=InvitationCsvRoleMode.MIXED),
     session: AsyncSession = Depends(db_session),
     current_user: dict = Depends(get_current_user),
 ):
@@ -143,6 +148,7 @@ async def upload_invitations(
             csv_content=csv_content,
             organization_id=organization_id,
             created_by_user_id=current_user.get("user_id"),
+            role_mode=role_mode,
         )
     except InvitationCsvError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

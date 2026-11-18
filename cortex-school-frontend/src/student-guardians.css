@@ -1,0 +1,42 @@
+.student-guardians {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.student-guardians li {
+  display: grid;
+  gap: 4px;
+}
+.student-guardians strong {
+  font-size: 11px;
+  color: #547248;
+  font-weight: 600;
+}
+.student-guardians a {
+  color: #6d7f65;
+  font-size: 11px;
+  text-decoration: none;
+}
+.student-guardians a:hover {
+  text-decoration: underline;
+}
+.sg-empty {
+  color: #7c8771;
+  font-size: 10px;
+  white-space: normal;
+}
+.ad-student-guardians {
+  border-top: 1px solid var(--line);
+  padding: 3px 0 21px;
+  margin-top: 20px;
+}
+.ad-table:has(.student-guardians) table {
+  min-width: 720px;
+}
+.sg-object {
+  padding: 0 23px 23px;
+}

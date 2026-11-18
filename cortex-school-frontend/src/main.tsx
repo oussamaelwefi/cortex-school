@@ -9,6 +9,7 @@ import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
   NavLink,
+  Navigate,
   Route,
   Routes,
   useLocation,
@@ -65,8 +66,19 @@ import { ReminderReviewPage } from "./reminders";
 import { SchoolAnalyticsPage } from "./analytics";
 import { GuardianTutorPage } from "./tutor";
 import { NeedsReviewPage } from "./needs-review";
+import { GuardianFamilyPage } from "./guardian-family";
+import { SchoolMembersPage } from "./school-members";
+import { AcademicDirectoryPage } from "./academic-directory";
+import { StudentGuardianContext } from "./student-guardians";
+import { SchoolSettingsPage } from "./school-settings";
 import "./styles.css";
 import "./needs-review.css";
+import "./guardian-family.css";
+import "./invitation-import.css";
+import "./school-members.css";
+import "./academic-directory.css";
+import "./student-guardians.css";
+import "./school-settings.css";
 const roleNames = {
   admin: "School administrator",
   teacher: "Teacher",
@@ -300,7 +312,7 @@ const icons: Record<string, any> = {
   members: Users,
   assistant: Sparkles,
   draft: Sparkles,
-  family: Heart,
+  family: Users,
   feed: BookOpen,
   "school-policies": BookOpen,
   tutor: LibraryBig,
@@ -373,10 +385,11 @@ function Shell({
     revision,
     role === "teacher" || (role === "admin" && !!activeYear),
   );
+  const [memberRevision, setMemberRevision] = useState(0);
   const members = useRemote(
     findEndpoint("GET", "/members/"),
     {},
-    revision,
+    revision + memberRevision,
     role === "admin",
   );
   const memberChoices = (memberRole?: string) =>
@@ -422,6 +435,7 @@ function Shell({
       }}
     >
       <ChoicesContext.Provider value={choices}>
+        <StudentGuardianContext.Provider value={{ enabled: role === "admin", students: students.data, members: members.data, loading: students.loading || members.loading, error: students.error || members.error }}>
         <div className="app-shell">
           {menu && (
             <button
@@ -551,7 +565,7 @@ function Shell({
               {!organization && (
                 <ErrorBox error="Your account is not linked to a school organization. Contact your administrator to enable school features." />
               )}
-              {role !== "teacher" && !["/analytics", "/tutor"].includes(location.pathname) && years.data?.length > 0 && (
+              {role !== "teacher" && !["/analytics", "/tutor", "/members", "/students", "/classrooms", "/settings"].includes(location.pathname) && years.data?.length > 0 && (
                 <div className="year-selector">
                   <CalendarDays size={14} />
                   <select
@@ -575,13 +589,30 @@ function Shell({
                 {role === "admin" && (
                   <Route path="/updates/:updateId/reminder" element={<ReminderReviewPage />} />
                 )}
+                {role === "guardian" && <>
+                  <Route path="/students" element={<Navigate to="/family" replace />} />
+                  <Route path="/attendance" element={<Navigate to="/family" replace />} />
+                </>}
                 {pages[role].map((page) => (
                   <Route
                     key={page.key}
                     path={`/${page.key}`}
                     element={
-                      role === "admin" && page.key === "review" ? (
+                      role === "guardian" && page.key === "family" ? (
+                        <GuardianFamilyPage />
+                      ) : role === "admin" && page.key === "review" ? (
                         <NeedsReviewPage />
+                      ) : role === "admin" && page.key === "members" ? (
+                        <SchoolMembersPage
+                          members={members.data}
+                          loading={members.loading}
+                          error={members.error}
+                          onRefresh={() => setMemberRevision((value) => value + 1)}
+                        />
+                      ) : role === "admin" && (page.key === "students" || page.key === "classrooms") ? (
+                        <AcademicDirectoryPage key={page.key} mode={page.key} years={years} initialYear={activeYear} onYearChange={setYear} members={members} onRefreshYears={() => setRevision((value) => value + 1)} />
+                      ) : role === "admin" && page.key === "settings" ? (
+                        <SchoolSettingsPage />
                       ) : page.key === "analytics" ? (
                         <SchoolAnalyticsPage />
                       ) : page.key === "tutor" ? (
@@ -651,6 +682,7 @@ function Shell({
             </div>
           )}
         </div>
+        </StudentGuardianContext.Provider>
       </ChoicesContext.Provider>
     </ToastContext.Provider>
   );

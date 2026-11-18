@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated, Literal
 
-from pydantic import StringConstraints, model_validator
+from pydantic import Field, StringConstraints, model_validator
 
 from core.pydantic import CustomBaseModel
 from modules.classrooms.models import TeacherAssignmentRole
@@ -107,3 +107,42 @@ class TeacherClassroomStudentResponse(CustomBaseModel):
     last_name: str
     effective_from: date
     effective_until: date | None
+
+
+class DirectoryAttendanceResponse(CustomBaseModel):
+    present: int = 0
+    late: int = 0
+    absent: int = 0
+    excused: int = 0
+    recorded_days: int = 0
+    rate: float | None = None
+
+
+class DirectoryStudentResponse(CustomBaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+    enrollment_id: uuid.UUID | None
+    placement_id: uuid.UUID | None = None
+    classroom_id: uuid.UUID | None = None
+    attendance: DirectoryAttendanceResponse
+    guardian_ids: list[str] = Field(default_factory=list)
+
+
+class DirectoryClassroomResponse(CustomBaseModel):
+    id: uuid.UUID
+    name: str
+    teachers: list[TeacherAssignmentResponse]
+    student_ids: list[uuid.UUID]
+
+
+class SchoolDirectoryResponse(CustomBaseModel):
+    year_id: uuid.UUID
+    year_name: str
+    year_status: str
+    school_date: date
+    roster_date: date
+    attendance_from: date
+    attendance_through: date | None
+    classrooms: list[DirectoryClassroomResponse]
+    students: list[DirectoryStudentResponse]

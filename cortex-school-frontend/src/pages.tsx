@@ -18,6 +18,7 @@ import {
   Sparkles,
   Download,
   Filter,
+  Upload,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApi, endpoints, findEndpoint } from "./api";
@@ -35,6 +36,7 @@ import { label } from "./forms";
 import type { Data, Endpoint, Role, SchoolMemberIdentity } from "./types";
 import { ChatAssistant } from "./chat";
 import { GuardianNotifications, GuardianPolicyList, reminderReviewHref, SchoolPoliciesButton } from "./reminders";
+import { GuardianChildCards } from "./guardian-family";
 
 const registrationDecisions = {
   approve: findEndpoint("POST", "/registration-requests/{request_id}/approve/"),
@@ -139,7 +141,7 @@ export const pages: Record<Role, Page[]> = {
       key: "members",
       title: "School members",
       description:
-        "Accepted invitations join your school automatically. No additional registration is needed.",
+        "Browse your school’s administrators, teachers, and guardians.",
       path: "/members/",
       module: "members",
     },
@@ -192,8 +194,8 @@ export const pages: Record<Role, Page[]> = {
   guardian: [
     {
       key: "family",
-      title: "My family",
-      description: "A closer connection to your child’s school day.",
+      title: "My children",
+      description: "Classes, attendance, and school updates, together in one place.",
       path: "/guardian/family/",
       module: "guardian_family",
     },
@@ -217,20 +219,6 @@ export const pages: Record<Role, Page[]> = {
       description: "Read policy documents shared by your school online.",
       path: "/guardian/family/policies/",
       module: "guardian_family",
-    },
-    {
-      key: "students",
-      title: "My children",
-      description: "Your children’s records and enrollment history.",
-      path: "/guardian/students/",
-      module: "student_registration",
-    },
-    {
-      key: "attendance",
-      title: "Attendance",
-      description: "Stay connected to your child’s daily attendance.",
-      path: "/guardian/students/{student_id}/attendance",
-      module: "attendance",
     },
     {
       key: "registrations",
@@ -616,11 +604,7 @@ export function Dashboard({ role, name }: { role: Role; name: string }) {
               ))}
             </div>
           ) : (
-            <DataView
-              data={state.data?.children || []}
-              endpoint={findEndpoint("GET", "/guardian/students/")}
-              onChanged={() => setRefresh((x) => x + 1)}
-            />
+            state.data?.children?.length ? <GuardianChildCards children={state.data.children} schoolDate={state.data.school_date} refresh={refresh} onChanged={() => setRefresh((x) => x + 1)} /> : <Empty title="No children linked yet" text="Children linked by your school will appear here." />
           )}
         </section>
         <aside className="panel quick-panel">
@@ -683,7 +667,7 @@ export function Dashboard({ role, name }: { role: Role; name: string }) {
                       Users,
                     ],
                     [
-                      "attendance",
+                      "family",
                       t("View attendance"),
                       t("Stay in the loop"),
                       ClipboardCheck,
@@ -867,6 +851,15 @@ export function ResourcePage({
         description={page.description}
       >
         {page.key === "settings" && role === "admin" && <SchoolPoliciesButton />}
+        {page.key === "invitations" && role === "admin" && (
+          <button
+            type="button"
+            className="button subtle"
+            onClick={() => setOp(findEndpoint("POST", "/invitations/upload/"))}
+          >
+            <Upload size={16} />{t("Import CSV")}
+          </button>
+        )}
         {page.key === "review" && (
           <button
             type="button"

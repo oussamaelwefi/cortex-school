@@ -10,6 +10,23 @@ from modules.invitations.models import UserRoles
 from modules.students.models import GuardianStudent, Student
 
 
+async def guardian_ids_by_student(
+    session: AsyncSession, organization_id: str, student_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, list[str]]:
+    if not student_ids:
+        return {}
+    rows = await session.execute(
+        select(GuardianStudent.student_id, GuardianStudent.guardian_workos_user_id)
+        .join(Student, Student.id == GuardianStudent.student_id)
+        .where(Student.organization_id == organization_id, Student.id.in_(student_ids))
+        .order_by(GuardianStudent.guardian_workos_user_id)
+    )
+    result = {}
+    for student_id, guardian_id in rows:
+        result.setdefault(student_id, []).append(guardian_id)
+    return result
+
+
 async def _get_student(
     session: AsyncSession,
     student_id: uuid.UUID,

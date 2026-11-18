@@ -13,6 +13,13 @@ class UserRoles(StrEnum):
     GUARDIAN = "guardian"
 
 
+class InvitationCsvRoleMode(StrEnum):
+    SCHOOL_ADMIN = "school_admin"
+    TEACHER = "teacher"
+    GUARDIAN = "guardian"
+    MIXED = "mixed"
+
+
 class InvitationSendStatus(StrEnum):
     PENDING = "pending"
     QUEUED = "queued"

@@ -1,0 +1,207 @@
+.ss-section {
+  margin-bottom: 24px;
+}
+.ss-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.ss-section > header > div {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.ss-section-icon {
+  display: grid;
+  place-items: center;
+  height: 42px;
+  width: 42px;
+  border-radius: 11px;
+  background: #eef3e7;
+  color: #73905e;
+  flex: none;
+}
+.ss-section h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: #3a5f3b;
+}
+.ss-section > header p {
+  margin: 0;
+  font-size: 11px;
+  color: #75816a;
+}
+.ss-content {
+  padding: 24px;
+}
+.ss-content > h3 {
+  font-size: 14px;
+  color: #3c6139;
+  margin: 22px 0 8px;
+}
+.ss-help {
+  font-size: 11px;
+  color: #6e7d62;
+  margin: 0 0 17px;
+  line-height: 1.7;
+}
+.ss-attendance-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding: 0 0 22px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+.ss-attendance-meta dt {
+  color: #738168;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+.ss-attendance-meta dd {
+  margin: 0;
+  color: #48633f;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+}
+.ss-weekdays li {
+  padding: 14px 8px;
+  border: 1px solid #e6eadf;
+  border-radius: 8px;
+  background: #fafbf7;
+  text-align: center;
+}
+.ss-weekdays li[data-instructional="true"] {
+  background: #eef4e8;
+  border-color: #bbcfaa;
+}
+.ss-weekdays strong {
+  display: block;
+  color: #6e7c63;
+  font-size: 11px;
+}
+.ss-weekdays li[data-instructional="true"] strong {
+  color: #466b36;
+}
+.ss-weekdays span {
+  display: block;
+  font-size: 9px;
+  color: #77836e;
+  line-height: 1.6;
+  margin-top: 7px;
+}
+.ss-weekday-field {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+}
+.ss-weekday-field label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #4c6b40;
+  font-size: 12px;
+  padding: 8px 0;
+}
+.ss-weekday-field input {
+  accent-color: #567f41;
+}
+.ss-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.ss-ai-grid article {
+  padding: 20px;
+  border: 1px solid #e1e8d9;
+  border-radius: 10px;
+  background: #fbfcf8;
+}
+.ss-ai-grid article > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ss-ai-grid h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #47653c;
+}
+.ss-ai-grid p {
+  font-size: 11px;
+  color: #718165;
+  line-height: 1.8;
+}
+.ss-ai-grid dl {
+  margin: 15px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.ss-ai-grid dt {
+  color: #77846d;
+}
+.ss-ai-grid dd {
+  margin: 0;
+  font-weight: 600;
+  color: #4d6a41;
+}
+.ss-feature-status {
+  flex: none;
+  font-size: 10px;
+  color: #7f806b;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #f0f1e9;
+}
+.ss-feature-status[data-enabled="true"] {
+  background: #e5efdc;
+  color: #4b7335;
+}
+.ss-edit-ai {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+@media (max-width: 1000px) {
+  .ss-weekdays {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .ss-section > header {
+    padding: 19px;
+    flex-wrap: wrap;
+  }
+  .ss-content {
+    padding: 20px;
+  }
+  .ss-ai-grid {
+    grid-template-columns: 1fr;
+  }
+  .ss-weekdays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ss-attendance-meta {
+    gap: 12px;
+  }
+  .ss-section-icon {
+    height: 36px;
+    width: 36px;
+  }
+}
