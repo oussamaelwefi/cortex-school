@@ -66,6 +66,16 @@ are non-blocking warnings. Publication and closure require confirmation. Closed
 years keep their calendar available in read-only mode. Class links preserve the
 selected year, and year/calendar changes refresh the shared workspace data.
 
+The teacher’s **My classrooms** page uses class cards with assignment roles,
+current/upcoming status, available daily student counts, and direct attendance
+and family-update actions. Open a class to browse/search its current students or
+read the school calendar. A student-specific update prefills only that student as
+its audience. Upcoming assignments keep attendance and composition unavailable
+while allowing preparation through the calendar. Class links preserve context;
+rosters load when opened and calendars load on first selection, without fetching
+every class roster for the overview. The page reuses the shared class list and
+the teacher-only API routes.
+
 The administrator’s **Needs review** page has a dedicated queue with school-wide
 open, urgent, and follow-up counts; category filters; priority and date filters;
 and pagination. Each issue keeps its context, deadline, and next action together.

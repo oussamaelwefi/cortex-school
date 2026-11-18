@@ -70,6 +70,7 @@ import { GuardianFamilyPage } from "./guardian-family";
 import { SchoolMembersPage } from "./school-members";
 import { AcademicDirectoryPage } from "./academic-directory";
 import { AcademicYearsPage } from "./academic-years";
+import { TeacherClassroomsPage } from "./teacher-classrooms";
 import { StudentGuardianContext } from "./student-guardians";
 import { SchoolSettingsPage } from "./school-settings";
 import { OnboardingPage } from "./onboarding";
@@ -81,6 +82,7 @@ import "./invitation-import.css";
 import "./school-members.css";
 import "./academic-directory.css";
 import "./academic-years.css";
+import "./teacher-classrooms.css";
 import "./student-guardians.css";
 import "./school-settings.css";
 const roleNames = {
@@ -631,6 +633,8 @@ function Shell({
                         <SchoolAnalyticsPage />
                       ) : page.key === "tutor" ? (
                         <GuardianTutorPage />
+                      ) : role === "teacher" && page.key === "classrooms" ? (
+                        <TeacherClassroomsPage classrooms={classrooms} onRefresh={() => setRevision((value) => value + 1)} />
                       ) : role === "teacher" && page.key === "attendance" ? (
                         <AttendancePage
                           choices={choices.classroom_id}
