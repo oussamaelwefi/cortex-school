@@ -155,6 +155,11 @@ prioritize each role’s daily tasks. Accounts with multiple authorized roles ca
 **Switch workspace** to return to the selected role’s home page. The accent also
 applies to dialogs and is cleared on sign-out.
 
+Cards, tables, forms, attendance pages, chat and study-tutor components use the
+role palette for their surfaces, text, controls and hover states. Green is reserved
+for positive statuses such as present, submitted or a correct quiz answer; neutral
+badges use the workspace accent.
+
 School names come from the authenticated `GET /school/context` endpoint. Approved
 onboarding requests supply the name locally; older schools use a bounded WorkOS
 lookup. If no name is available, the interface displays **Your school**. Deploy the

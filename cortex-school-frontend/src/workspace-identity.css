@@ -13,6 +13,12 @@ html[data-workspace-role="teacher"],
   --workspace-soft: #e8f3f7;
   --workspace-tint: #f7fafc;
   --workspace-border: #cce2eb;
+  --ui-text: #2b3f4a;
+  --ui-muted: #647b89;
+  --ui-faint: #8295a0;
+  --ui-line: #dce6ec;
+  --ui-surface: #f5f9fc;
+  --ui-canvas: #f7fafc;
 }
 html[data-workspace-role="guardian"],
 .app-shell[data-role="guardian"] {
@@ -21,9 +27,27 @@ html[data-workspace-role="guardian"],
   --workspace-soft: #f3edf7;
   --workspace-tint: #fcf9fd;
   --workspace-border: #e3d5ea;
+  --ui-text: #44384b;
+  --ui-muted: #7c6c85;
+  --ui-faint: #9a8ba2;
+  --ui-line: #e9e1ed;
+  --ui-surface: #faf7fc;
+  --ui-canvas: #fcf9fd;
+}
+html:is([data-workspace-role="teacher"], [data-workspace-role="guardian"]),
+.app-shell:is([data-role="teacher"], [data-role="guardian"]) {
+  /* Shared surfaces, forms and portaled dialogs inherit the same role palette.
+     Components keep their existing colors when these tokens are absent. */
+  --ui-accent: var(--workspace-accent);
+  --ui-accent-ink: var(--workspace-ink);
+  --ui-accent-soft: var(--workspace-soft);
+  --ui-accent-border: var(--workspace-border);
+  --ui-shadow: #26314714;
+  --ui-overlay: #20253555;
 }
 html[data-workspace-role] {
   --green: var(--workspace-accent);
+  accent-color: var(--workspace-accent);
 }
 html[data-workspace-role] .primary:hover {
   background: var(--workspace-ink);
@@ -116,7 +140,7 @@ html[data-workspace-role]
   display: flex;
   gap: 8px;
   margin-top: 4px;
-  color: #707b79;
+  color: var(--ui-muted, #707b79);
   font-size: 10px;
 }
 .workspace-location > span:not(:nth-child(2)) {
@@ -126,7 +150,7 @@ html[data-workspace-role]
   max-width: 210px;
 }
 .workspace-location > span:nth-child(2) {
-  color: #b1b8b5;
+  color: var(--ui-faint, #b1b8b5);
 }
 .app-shell[data-role] .topbar-right {
   gap: 16px;
@@ -140,7 +164,7 @@ html[data-workspace-role]
 }
 .workspace-switch > span {
   font-size: 9px;
-  color: #707b79;
+  color: var(--ui-muted, #707b79);
 }
 .app-shell[data-role] .workspace-switch .role-switch {
   color: var(--workspace-ink);

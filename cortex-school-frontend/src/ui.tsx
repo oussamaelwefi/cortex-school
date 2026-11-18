@@ -69,7 +69,7 @@ export function Badge({ value }: { value: any }) {
   const v = String(value);
   return (
     <span
-      className={`badge ${/urgent|failed|absent|overdue|rejected|missing/.test(v) ? "red" : /pending|draft|late|assigned|warning|queued/.test(v) ? "amber" : ""}`}
+      className={`badge ${/urgent|failed|absent|overdue|rejected|missing/.test(v) ? "red" : /pending|draft|late|assigned|warning|queued/.test(v) ? "amber" : /^(active|approved|present|submitted|published|completed|sent|ready|accepted|acknowledged|delivered|enrolled)$/.test(v) ? "success" : ""}`}
     >
       {label(v)}
     </span>
