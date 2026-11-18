@@ -19,7 +19,13 @@ application configured in `app/core/auth.py`.
 
 ## Platform maintenance access
 
-Set `WORKOS_OPERATOR_USER_IDS` in `docker/.env` to a JSON array of WorkOS user IDs for staff authorized to maintain data across schools. API documentation accepts a current WorkOS bearer token from an operator. To enable the browser console at `/admin/`, also set `ADMIN_SESSION_SECRET` to a randomly generated secret of at least 32 characters. Use the console’s WorkOS access-token form, then open `/api/docs` in the same browser session. The console session expires with that token.
+Set `WORKOS_OPERATOR_USER_IDS` to a JSON array of WorkOS user IDs for staff authorized to maintain data across schools, and `ADMIN_SESSION_SECRET` to a randomly generated secret of at least 32 characters. On Railway, configure these on the backend service; locally, use `docker/.env`.
+
+In the WorkOS application used by Cortex, add `https://YOUR-BACKEND-DOMAIN/admin/auth/callback` to the allowed redirect URIs (locally, `http://localhost:9000/admin/auth/callback`). Open the backend's `/admin/` and choose **Sign in with WorkOS**. Normal AuthKit sign-in returns you to the console; no access token needs to be copied. This uses the same WorkOS application and token validation as Cortex, and checks the operator allowlist independently of school roles.
+
+The callback URL is inferred from the request. If a reverse proxy reports a different scheme or hostname, set `ADMIN_AUTH_REDIRECT_URI` to the exact public callback URL registered in WorkOS. The authorization-code flow uses PKCE, a browser-bound state, and a single-use WorkOS code; no additional API secret is required for console sign-in. A separate signed, HttpOnly cookie with a ten-minute lifetime and SameSite=Lax allows the WorkOS redirect to complete. The operator session keeps SameSite=Strict; both cookies use Secure outside development. Tokens are never stored in either cookie.
+
+After signing in, `/api/docs` is available in the same browser session. The console session expires with the verified WorkOS access token; use the sign-in button again when needed. API documentation also accepts a current operator bearer token.
 
 ## Local Docker runtime for this checkout
 

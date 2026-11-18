@@ -1,17 +1,21 @@
 {% extends "sqladmin/base.html" %}
 {% block body %}
 <div class="d-flex align-items-center justify-content-center vh-100">
-  <form class="col-lg-6 col-md-6 card card-md" action="{{ url_for('admin:login') }}" method="POST" autocomplete="off">
+  <div class="col-lg-5 col-md-7 card card-md">
     <div class="card-body">
-      <h2 class="card-title text-center mb-4">WorkOS operator sign-in</h2>
-      <div class="mb-3">
-        <label class="form-label" for="access-token">WorkOS access token</label>
-        <input id="access-token" name="access_token" type="password" class="form-control{% if error %} is-invalid{% endif %}"
-          required autocomplete="off" spellcheck="false">
-        {% if error %}<div class="invalid-feedback">{{ error }}</div>{% endif %}
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Sign in</button>
+      <h1 class="card-title text-center mb-3">Cortex operator console</h1>
+      <p class="text-secondary text-center mb-4">Sign in with your Cortex account to manage the platform.</p>
+      {% set login_error = request.query_params.get('error') %}
+      {% if login_error == 'forbidden' %}
+      <div class="alert alert-danger" role="alert">This account does not have platform operator access. Sign in with an authorized account.</div>
+      {% elif login_error == 'expired' %}
+      <div class="alert alert-warning" role="alert">Your sign-in attempt expired. Please try again.</div>
+      {% elif login_error or error %}
+      <div class="alert alert-danger" role="alert">Sign-in could not be completed. Please try again.</div>
+      {% endif %}
+      <a class="btn btn-primary w-100" href="{{ url_for('operator_login_start') }}">Sign in with WorkOS</a>
+      <p class="text-secondary text-center small mt-3 mb-0">Access is limited to authorized platform operators.</p>
     </div>
-  </form>
+  </div>
 </div>
 {% endblock %}

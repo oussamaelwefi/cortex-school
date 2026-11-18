@@ -10,6 +10,7 @@ class Settings(ModelConfig):
     PROJECT_NAME: str = "my-service"
     ENVIRONMENT: str = "development"
     ADMIN_SESSION_SECRET: str = ""
+    ADMIN_AUTH_REDIRECT_URI: str = ""
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
     AI_TEACHER_DRAFT_REDIS_URL: str = "redis://redis:6379/2"

@@ -1,7 +1,6 @@
 import uuid
 
 from fastapi import HTTPException
-from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqladmin import Admin, ModelView, action
 from sqladmin.authentication import AuthenticationBackend
@@ -9,7 +8,7 @@ from sqladmin.filters import AllUniqueStringValuesFilter
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from core.auth import has_operator_session, is_workos_operator, verify_workos_access_token
+from core.auth import has_operator_session
 from core.config import settings
 from core.db import SessionLocal, engine
 from modules.academic_years.models import (
@@ -40,21 +39,8 @@ class AdminAuth(AuthenticationBackend):
         self.middlewares = []
 
     async def login(self, request: Request) -> bool:
-        form = await request.form()
-        token = form.get("access_token")
-        if not isinstance(token, str) or not token.strip():
-            return False
-        try:
-            claims = await run_in_threadpool(verify_workos_access_token, token.strip())
-        except HTTPException:
-            return False
-        user_id = claims["sub"]
-        if not is_workos_operator(user_id):
-            return False
-
-        request.session.clear()
-        request.session["workos_operator"] = {"user_id": user_id, "expires_at": int(claims["exp"])}
-        return True
+        # Browser login is completed by the WorkOS authorization-code callback.
+        return False
 
     async def logout(self, request: Request) -> bool:
         request.session.clear()

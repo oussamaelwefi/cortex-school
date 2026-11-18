@@ -12,6 +12,7 @@ from core.auth import require_workos_operator
 from core.admin import setup_admin
 from core.config import settings
 from core.db import close_db_connections
+from core.operator_login import router as operator_login_router
 from core.request_id import RequestIdMiddleware
 from modules import api_router
 
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
             same_site="strict",
             https_only=settings.ENVIRONMENT != "development",
         )
+        app.include_router(operator_login_router)
         setup_admin(app)
     return app
 
