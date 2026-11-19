@@ -212,6 +212,15 @@ backend and frontend changes together; no database migration is needed.
 
 ## API contract maintenance
 
+The assistant is available in all three workspaces and can retrieve authorized
+school records on demand. Its request sends the selected workspace and language
+as separate fields; the backend validates permissions. Role-specific suggestions
+cover attendance, enrollment counts and family acknowledgements. Data answers
+display source links, and policy sources include an expandable cited passage.
+Lookups do not publish, mark messages as read or acknowledge them. Failed requests
+keep the question for an explicit retry. Deploy the backend changes with the
+frontend; the existing LLM and WorkOS configuration stays on the backend.
+
 ```powershell
 npm run contracts
 npm test

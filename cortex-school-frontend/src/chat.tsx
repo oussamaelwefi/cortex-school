@@ -11,9 +11,13 @@ import {
   VolumeX,
   Plus,
   ArrowUpRight,
+  Database,
+  BookOpen,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { findEndpoint, useApi } from "./api";
 import { getChatContent } from "./chat-content.mjs";
+import { schoolChatPayload } from "./chat-request";
 import type { Role } from "./types";
 import "./chat.css";
 
@@ -22,6 +26,12 @@ type Message = {
   role: "user" | "assistant";
   text: string;
   time: Date;
+  sources?: {
+    id: string;
+    label: string;
+    href?: string | null;
+    excerpt?: string | null;
+  }[];
 };
 const welcome = (role: Role): Message => ({
   id: "welcome",
@@ -94,24 +104,15 @@ export function ChatAssistant({ role }: { role: Role }) {
       setMessages(conversation);
       setDraft("");
     }
-    // The backend accepts a single message. Include recent turns so follow-ups
-    // retain context without requiring a different API contract.
-    const history = conversation.filter((m) => m.id !== "welcome").slice(-12);
-    const conversationText =
-      history.length === 1
-        ? content
-        : `Continue this conversation. Respond to the latest user message.\n\n${history.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n\n")}`;
-    const message = `${contentForRole.context}\nDo not claim to have read school records or performed actions; this chat has no school-data tools.\n\n${conversationText}`;
     try {
       const result = await api(
         findEndpoint("POST", "/ai/chat/"),
         {},
-        {
-          message:
-            getLocale() === "fr-FR"
-              ? `${message}\n\nRéponds en français, sauf si une autre langue est explicitement demandée.`
-              : message,
-        },
+        schoolChatPayload(
+          role,
+          getLocale() === "fr-FR" ? "fr" : "en",
+          conversation,
+        ),
       );
       if (!result?.reply?.trim())
         throw new Error(
@@ -125,6 +126,7 @@ export function ChatAssistant({ role }: { role: Role }) {
             role: "assistant",
             text: result.reply,
             time: new Date(),
+            sources: Array.isArray(result.sources) ? result.sources : [],
           },
         ]);
     } catch (e) {
@@ -227,6 +229,41 @@ export function ChatAssistant({ role }: { role: Role }) {
               <div className="chat-bubble">
                 {m.id === "welcome" ? t(m.text) : m.text}
               </div>
+              {!!m.sources?.length && (
+                <section
+                  className="chat-sources"
+                  aria-label={t("Answer sources")}
+                >
+                  <p>
+                    <Database size={13} />
+                    {t("Based on your accessible school data")}
+                  </p>
+                  {m.sources.map((source) => (
+                    <div className="chat-source" key={source.id}>
+                      {source.href?.startsWith("/") &&
+                      !source.href.startsWith("//") ? (
+                        <Link to={source.href}>
+                          <BookOpen size={13} />
+                          <span>
+                            [{source.id}] {t(source.label)}
+                          </span>
+                          <ArrowUpRight size={13} />
+                        </Link>
+                      ) : (
+                        <strong>
+                          [{source.id}] {t(source.label)}
+                        </strong>
+                      )}
+                      {source.excerpt && (
+                        <details>
+                          <summary>{t("View cited passage")}</summary>
+                          <p>{source.excerpt}</p>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </section>
+              )}
               <div className="chat-message-meta">
                 <time dateTime={m.time.toISOString()}>
                   {m.time.toLocaleTimeString(getLocale(), {
@@ -315,7 +352,7 @@ export function ChatAssistant({ role }: { role: Role }) {
         )}
         {error && (
           <div className="chat-error" role="alert">
-            <p>{error}</p>
+            <p>{t(error)}</p>
             {failed && (
               <button disabled={busy} onClick={() => send(failed, true)}>
                 {t(" Try again ")}

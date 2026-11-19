@@ -188,6 +188,49 @@ The imported deadline must follow the publication date and already be past. The
 normal application continues to reject past deadlines when creating new updates.
 Repeating this import preserves any subsequent family reads and acknowledgements.
 
+## School-data chat
+
+`POST /api/ai/chat/` accepts `message`, an optional authenticated workspace `role`
+(`admin`, `teacher`, `guardian`), and `language` (`fr` by default, or `en`).
+The response includes `reply` and a `sources` array with verified source IDs,
+internal page links, and exact excerpts for cited school-policy passages.
+
+The model can call `QuerySchoolData` and `SearchSchoolPolicies` before finishing
+with `ChatAnswer`. Queries cover students, classrooms, enrollments, attendance,
+academic years/calendars, student updates, family acknowledgements, publications,
+registration requests, invitations and school members. Access is determined by
+the signed-in user's claims and verified active WorkOS school membership:
+
+| Workspace | Accessible data |
+| --- | --- |
+| Administrator | Records and members of their own school |
+| Teacher | Assigned classes and students, permitted attendance history, their own student updates and family acknowledgements, their publication inbox |
+| Guardian | Linked children, their attendance, personal updates/receipts, registration requests and publication inbox |
+
+All three roles can search their school's policy passages and active academic
+calendars. Teachers cannot access registration requests, invitations or the member
+directory; invitations and the directory are administrator-only. A client-supplied
+role must already be authorized for the session. Organization/user IDs are never
+model tool parameters. The database transaction is read-only, with a four-second
+statement timeout. The tools do not mark records as read, publish, acknowledge or
+execute arbitrary SQL. Only bounded query results and policy passages are sent
+to the configured AI provider; credentials and invitation error payloads are excluded.
+
+Counts use SQL aggregates over the authorized scope, with separately paginated
+items. Missing attendance does not count as absence. Acknowledgements are counted
+per guardian/student pair, and a read receipt does not count as acknowledgement.
+Lookups are fresh for each HTTP request; previous conversational citations must be
+retrieved again. The entire model/tool loop has a 50-second deadline and eight-step
+limit. Source IDs are checked against actual results; model wording still needs
+the user's usual review.
+
+Deploy the backend and frontend together. No migration or new worker task is
+needed. The backend needs `WORKOS_API_KEY` and the existing LLM configuration
+(`OPENROUTER_API_KEY` + `OPENROUTER_MODEL`, or `OPENAI_API_KEY`). Use a model with
+function/tool calling; the project's configured `openai/gpt-4.1-mini` can use this
+request format. Generic writing help needs no database lookup. Membership or
+provider failures return a safe error rather than an unverified data answer.
+
 ## Folders
 
 | Path | What |

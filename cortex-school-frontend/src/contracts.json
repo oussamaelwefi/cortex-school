@@ -382,7 +382,28 @@
       "properties": {
         "message": {
           "type": "string",
-          "required": true
+          "required": true,
+          "min_length": 1,
+          "max_length": 30000
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "teacher",
+            "guardian"
+          ],
+          "nullable": true,
+          "required": false
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "fr",
+            "en"
+          ],
+          "required": false,
+          "default": "fr"
         }
       },
       "name": "ChatRequest"

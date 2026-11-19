@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { getChatContent } from "../src/chat-content.mjs";
 
-test("guardians receive home-learning and teacher-contact suggestions", () => {
+test("guardians receive child-data and teacher-contact suggestions", () => {
   const content = getChatContent("guardian");
   assert.match(content.suggestions[0], /my child’s teacher/);
-  assert.match(content.suggestions[1], /at home/);
-  assert.match(content.suggestions[2], /my child/);
+  assert.match(content.suggestions[1], /children.*attendance/);
+  assert.match(content.suggestions[2], /my acknowledgement/);
   assert.ok(
     content.suggestions.every(
       (s) => !s.includes("classroom") && !s.includes("to a parent"),

@@ -1,36 +1,36 @@
 const content = {
   guardian: {
-    subtitle: "A little support for your child’s learning journey.",
+    subtitle: "Your children’s school information, with helpful answers.",
     welcome:
-      "Hello! 👋 I’m your Cortex family assistant.\nI can help you support learning at home or find the right words for your child’s teacher.",
+      "Hello! 👋 I’m your Cortex family assistant.\nI can look up your children’s attendance, school messages and policies, or help you write to a teacher.",
     suggestions: [
       "Help me write a message to my child’s teacher",
-      "Suggest a learning activity to do at home",
-      "Help me build a homework routine for my child",
+      "Show my children’s recent attendance",
+      "Which school messages still need my acknowledgement?",
     ],
     context:
       "The user is a parent or guardian. Tailor your response to supporting their child, learning at home, and communicating with teachers.",
   },
   teacher: {
-    subtitle: "A little inspiration for your school day.",
+    subtitle: "Your classes, attendance and family communication.",
     welcome:
-      "Hello! 👋 I’m your Cortex teaching assistant.\nI can help with classroom ideas, lesson planning, and messages to families.",
+      "Hello! 👋 I’m your Cortex teaching assistant.\nI can look up your assigned classes, attendance and family acknowledgements, or help draft messages.",
     suggestions: [
       "Help me write a message to a parent",
-      "Suggest a classroom activity",
-      "Help me plan my school day",
+      "Who is absent from my classes today?",
+      "Which families have not acknowledged my updates?",
     ],
     context:
       "The user is a teacher. Tailor your response to teaching, classroom planning, and communication with families.",
   },
   admin: {
-    subtitle: "A little support for your school community.",
+    subtitle: "Ask about your school’s records and policies.",
     welcome:
-      "Hello! 👋 I’m your Cortex school assistant.\nI can help with school communication, welcoming families, and organizing your day.",
+      "Hello! 👋 I’m your Cortex school assistant.\nI can look up students, classes, registrations, invitations and school policies, or help draft an announcement.",
     suggestions: [
       "Help me draft an announcement for families",
-      "Create a checklist for welcoming a new student",
-      "Help me organize school administration tasks",
+      "How many students are enrolled in the school?",
+      "Which acknowledgements are overdue?",
     ],
     context:
       "The user is a school administrator. Tailor your response to school operations and communication with the school community.",

@@ -3,7 +3,8 @@
 PROMPTS = {
     "workflow_simple_reply": {
         "template": "chat/workflow_simple_reply",
-        "description": "Short friendly reply to a guest message",
+        "description": "Role-scoped school assistant with read-only data and policy tools",
+        "version": "school_data_chat_v1",
     },
     "workflow_teacher_update_draft": {
         "template": "teacher/update_draft",
