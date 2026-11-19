@@ -63,6 +63,15 @@ test("admin relationships and school settings", async (suite) => {
       if (endpoint.path === "/school/attendance-settings")
         return endpoint.method === "PUT" ? body : attendanceSettings;
       if (endpoint.path === "/school/ai-settings") return aiSettings;
+      if (endpoint.path === "/ai/chat/access/")
+        return {
+          school_data_enabled: true,
+          personal_data_enabled: true,
+          effective_data_enabled: true,
+          can_manage_school: true,
+          can_manage_personal: false,
+          revision: 0,
+        };
       throw new Error(`Unexpected endpoint ${endpoint.path}`);
     });
     const element = document.createElement("div");
@@ -212,7 +221,7 @@ test("admin relationships and school settings", async (suite) => {
     "settings name all seven weekdays and View AI settings fetches and displays directly",
     async (t) => {
       const { element, api, button } = await mount(t, SchoolSettingsPage);
-      assert.equal(api.mock.callCount(), 1);
+      assert.equal(api.mock.callCount(), 2);
       const weekdays = [...element.querySelectorAll(".ss-weekdays li")];
       assert.deepEqual(
         weekdays.map((entry) => entry.querySelector("strong").textContent),
@@ -229,7 +238,7 @@ test("admin relationships and school settings", async (suite) => {
       assert.equal(weekdays[0].dataset.instructional, "true");
       assert.equal(weekdays[5].dataset.instructional, "false");
       await act(async () => button("View AI settings").click());
-      assert.equal(api.mock.callCount(), 2);
+      assert.equal(api.mock.callCount(), 3);
       assert.equal(api.mock.calls[1].arguments[0].method, "GET");
       assert.match(
         element.querySelector("#school-ai-settings").textContent,

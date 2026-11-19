@@ -14,6 +14,7 @@ from modules.academic_years.models import (
     AcademicYearStatus,
     CalendarEntry,
 )
+from modules.ai.chat_access import access_state, blocked_guardians, protected_students
 from modules.attendance.models import AttendanceRecord
 from modules.attendance.services import _current_school_date
 from modules.classrooms.models import ClassEnrollment, Classroom, TeacherAssignment
@@ -33,7 +34,7 @@ from modules.student_updates.models import (
     StudentUpdateStatus,
 )
 from modules.students.models import GuardianStudent, Student
-from sqlalchemy import and_, exists, func, or_, select, text
+from sqlalchemy import String, and_, any_, cast, exists, func, or_, select, text
 
 
 def selected_role(current_user: dict, requested: ChatRole | None) -> ChatRole:
@@ -68,17 +69,30 @@ class SchoolDataAccess:
         self.sources: dict[str, ChatSource] = {}
         self._source_keys = {}
         self.members = None
+        self.privacy_revision = None
 
     async def ensure_access(self):
-        if self.ready:
-            return
-        await _active_viewer(
-            self.user, "school_admin" if self.role == "admin" else self.role
+        if not self.ready:
+            await _active_viewer(
+                self.user, "school_admin" if self.role == "admin" else self.role
+            )
+            # This is a fresh request session. PostgreSQL prevents accidental writes.
+            await self.session.execute(text("SET TRANSACTION READ ONLY"))
+            await self.session.execute(text("SET LOCAL statement_timeout = '4000ms'"))
+        state = await access_state(self.session, self.user, self.role)
+        if not state["effective_data_enabled"]:
+            raise HTTPException(403, "Chat access to school data is turned off.")
+        if (
+            self.privacy_revision is not None
+            and state["revision"] != self.privacy_revision
+        ):
+            raise HTTPException(
+                409, "Chat privacy settings changed. Start a new question."
+            )
+        self.privacy_revision = state["revision"]
+        school = await self.session.get(
+            School, self.organization_id, populate_existing=True
         )
-        # This is a fresh request session. PostgreSQL also prevents accidental writes.
-        await self.session.execute(text("SET TRANSACTION READ ONLY"))
-        await self.session.execute(text("SET LOCAL statement_timeout = '4000ms'"))
-        school = await self.session.get(School, self.organization_id)
         if school is None:
             raise HTTPException(404, "School not found")
         self.today = _current_school_date(school)
@@ -123,7 +137,8 @@ class SchoolDataAccess:
 
     def students(self):
         statement = select(Student.id).where(
-            Student.organization_id == self.organization_id
+            Student.organization_id == self.organization_id,
+            Student.id.not_in(protected_students(self.organization_id)),
         )
         if self.role == "guardian":
             statement = statement.where(
@@ -202,6 +217,7 @@ class SchoolDataAccess:
             "timezone": self.timezone,
             "total_count": total,
             "items": items,
+            "scope": "Authorized records allowed by chat privacy settings. Counts exclude protected records.",
             **extra,
         }
         # Keep counts intact when shortening a large result; never imply a partial list is complete.
@@ -342,7 +358,10 @@ class SchoolDataAccess:
                 "allowed_status_values": sorted(statuses[query.dataset]),
             }
         await self.ensure_access()
-        return await getattr(self, f"read_{query.dataset}")(query)
+        result = await getattr(self, f"read_{query.dataset}")(query)
+        # A preference changed while querying: discard the whole result, including counts.
+        await self.ensure_access()
+        return result
 
     async def read_overview(self, q):
         student_count = await self.session.scalar(
@@ -615,6 +634,7 @@ class SchoolDataAccess:
             .join(AcademicYear, AcademicYear.id == Classroom.academic_year_id)
             .where(
                 Student.organization_id == self.organization_id,
+                Student.id.not_in(protected_students(self.organization_id)),
                 AcademicYear.organization_id == self.organization_id,
                 Enrollment.academic_year_id == Classroom.academic_year_id,
                 AttendanceRecord.school_date >= start,
@@ -738,7 +758,28 @@ class SchoolDataAccess:
         statement = statement.where(
             StudentUpdate.organization_id == self.organization_id,
             Student.organization_id == self.organization_id,
+            Student.id.not_in(protected_students(self.organization_id)),
+            StudentUpdate.teacher_workos_user_id.not_in(
+                blocked_guardians(self.organization_id)
+            ),
+            # Shared text may mention another recipient. Withhold the complete
+            # update if any of its student recipients is protected.
+            StudentUpdate.id.not_in(
+                select(StudentUpdateRecipient.student_update_id)
+                .where(
+                    StudentUpdateRecipient.student_id.in_(
+                        protected_students(self.organization_id)
+                    ),
+                )
+                .correlate(None)
+            ),
         )
+        if pending or self.role == "guardian":
+            statement = statement.where(
+                GuardianStudent.guardian_workos_user_id.not_in(
+                    blocked_guardians(self.organization_id)
+                ),
+            )
         if self.role == "teacher":
             statement = statement.where(
                 StudentUpdate.teacher_workos_user_id == self.user_id,
@@ -873,6 +914,54 @@ class SchoolDataAccess:
                     *_inbox_conditions(self.user_id, self.organization_id, self.role)
                 )
             )
+        protected_recipient = exists(
+            select(PublicationRecipient.id)
+            .where(
+                PublicationRecipient.publication_id == SchoolPublication.id,
+                or_(
+                    PublicationRecipient.user_id.in_(
+                        blocked_guardians(self.organization_id)
+                    ),
+                    exists(
+                        select(Student.id)
+                        .where(
+                            Student.id.in_(protected_students(self.organization_id)),
+                            cast(Student.id, String)
+                            == any_(PublicationRecipient.student_ids),
+                        )
+                        .correlate(PublicationRecipient)
+                    ),
+                ),
+            )
+            .correlate(SchoolPublication)
+        )
+        protected_target = exists(
+            select(Student.id)
+            .where(
+                Student.id.in_(protected_students(self.organization_id)),
+                cast(Student.id, String) == any_(SchoolPublication.target_ids),
+            )
+            .correlate(SchoolPublication)
+        )
+        hidden_users = blocked_guardians(self.organization_id).subquery()
+        protected_user_target = exists(
+            select(hidden_users.c.guardian_user_id)
+            .where(
+                hidden_users.c.guardian_user_id == any_(SchoolPublication.target_ids),
+            )
+            .correlate(SchoolPublication)
+        )
+        statement = statement.where(
+            SchoolPublication.author_user_id.not_in(
+                blocked_guardians(self.organization_id)
+            ),
+            ~protected_recipient,
+            ~and_(SchoolPublication.target_kind == "students", protected_target),
+            ~and_(
+                SchoolPublication.target_kind.in_(["guardians", "teachers"]),
+                protected_user_target,
+            ),
+        )
         if q.search:
             statement = statement.where(
                 SchoolPublication.title.icontains(q.search, autoescape=True)
@@ -981,6 +1070,24 @@ class SchoolDataAccess:
             .where(
                 StudentRegistrationRequest.organization_id == self.organization_id,
                 AcademicYear.organization_id == self.organization_id,
+                StudentRegistrationRequest.guardian_workos_user_id.not_in(
+                    blocked_guardians(self.organization_id)
+                ),
+                or_(
+                    StudentRegistrationRequest.resolved_student_id.is_(None),
+                    StudentRegistrationRequest.resolved_student_id.not_in(
+                        protected_students(self.organization_id)
+                    ),
+                ),
+                ~exists(
+                    select(Student.id).where(
+                        Student.id.in_(protected_students(self.organization_id)),
+                        func.lower(Student.first_name)
+                        == func.lower(StudentRegistrationRequest.child_first_name),
+                        func.lower(Student.last_name)
+                        == func.lower(StudentRegistrationRequest.child_last_name),
+                    )
+                ),
             )
         )
         if self.role == "guardian":
@@ -1026,6 +1133,16 @@ class SchoolDataAccess:
         )
 
     async def read_invitations(self, q):
+        # Invitations have email addresses but no reliable recipient user ID.
+        # Withhold this dataset if opt-outs exist rather than risk identifying a
+        # protected person via an older email, name, role or invitation state.
+        if await self.session.scalar(
+            exists(blocked_guardians(self.organization_id)).select()
+        ):
+            return {
+                "status": "privacy_restricted",
+                "message": "Invitation records cannot be safely isolated under the current chat privacy settings. Use the invitations screen.",
+            }
         statement = select(Invitation).where(
             Invitation.organization_id == self.organization_id
         )
@@ -1070,9 +1187,13 @@ class SchoolDataAccess:
         )
 
     async def read_members(self, q):
+        hidden = set(
+            await self.session.scalars(blocked_guardians(self.organization_id))
+        )
         members = [
             item
             for item in await self.school_members()
+            if item["id"] not in hidden
             if (
                 not q.search
                 or q.search.casefold()
@@ -1123,7 +1244,7 @@ class SchoolDataAccess:
                 .limit(3)
             )
         ).all()
-        return {
+        result = {
             "status": "ok",
             "items": [
                 {
@@ -1145,3 +1266,5 @@ class SchoolDataAccess:
             ],
             "no_matching_policy": not bool(rows),
         }
+        await self.ensure_access()
+        return result

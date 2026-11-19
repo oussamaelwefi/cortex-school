@@ -1,16 +1,16 @@
 import logging
 
 import httpx
-from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from workos import AsyncWorkOSClient, WorkOSError
-
 from core.auth import Permission, get_current_user, require_permission
 from core.config import settings
 from core.db import db_session
 from core.router import APIRouter
+from fastapi import Depends, HTTPException, Response, status
+from modules.ai.chat_access import save_preference
+from modules.ai.chat_data import selected_role
+from modules.ai.schemas import ChatDataAccessResponse, ChatDataPreferenceRequest
 from modules.onboarding.models import SchoolRequest, SchoolRequestStatus
+from modules.publications.services import _active_viewer
 from modules.schools.models import School
 from modules.schools.schemas import (
     SchoolAISettingsRequest,
@@ -19,7 +19,9 @@ from modules.schools.schemas import (
     SchoolAttendanceSettingsResponse,
     SchoolContextResponse,
 )
-
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from workos import AsyncWorkOSClient, WorkOSError
 
 router = APIRouter(
     prefix="/school",
@@ -27,6 +29,25 @@ router = APIRouter(
 )
 logger = logging.getLogger(__name__)
 manage_school = [Depends(require_permission(Permission.SCHOOL_MANAGE))]
+
+
+@router.put(
+    "/chat-data-settings",
+    response_model=ChatDataAccessResponse,
+    dependencies=manage_school,
+)
+async def set_school_chat_data_access(
+    payload: ChatDataPreferenceRequest,
+    response: Response,
+    session: AsyncSession = Depends(db_session),
+    current_user: dict = Depends(get_current_user),
+):
+    response.headers["Cache-Control"] = "no-store"
+    selected_role(current_user, "admin")
+    await _active_viewer(current_user, "school_admin")
+    return await save_preference(
+        session, current_user, enabled=payload.enabled, personal=False
+    )
 
 
 async def _get_current_school(
@@ -48,10 +69,12 @@ async def get_school_context(
     current_user: dict = Depends(get_current_user),
 ):
     school = await _get_current_school(session, current_user)
-    name = await session.scalar(select(SchoolRequest.school_name).where(
-        SchoolRequest.organization_id == school.organization_id,
-        SchoolRequest.status == SchoolRequestStatus.APPROVED,
-    ))
+    name = await session.scalar(
+        select(SchoolRequest.school_name).where(
+            SchoolRequest.organization_id == school.organization_id,
+            SchoolRequest.status == SchoolRequestStatus.APPROVED,
+        )
+    )
     # Older schools may predate the onboarding workflow. Resolve their display
     # name without making the workspace depend on WorkOS availability.
     if not name and settings.WORKOS_API_KEY:
@@ -62,7 +85,9 @@ async def get_school_context(
                 request_timeout=3,
                 max_retries=0,
             ) as client:
-                organization = await client.organizations.get_organization(school.organization_id)
+                organization = await client.organizations.get_organization(
+                    school.organization_id
+                )
                 name = organization.name
         except (WorkOSError, httpx.HTTPError):
             logger.warning("School display name is temporarily unavailable")
@@ -125,7 +150,9 @@ async def replace_school_ai_settings(
 ):
     school = await _get_current_school(session, current_user)
     school.ai_teacher_draft_enabled = payload.ai_teacher_draft_enabled
-    school.ai_teacher_draft_default_language = payload.ai_teacher_draft_default_language.value
+    school.ai_teacher_draft_default_language = (
+        payload.ai_teacher_draft_default_language.value
+    )
     school.ai_guardian_weekly_explanation_enabled = (
         payload.ai_guardian_weekly_explanation_enabled
     )

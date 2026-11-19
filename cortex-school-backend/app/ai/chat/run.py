@@ -85,7 +85,11 @@ async def school_reply(
     try:
         async with asyncio.timeout(CHAT_TIMEOUT_SECONDS):
             for _ in range(MAX_STEPS):
+                if access.ready:
+                    await access.ensure_access()
                 response = await model.ainvoke(messages)
+                if access.ready:
+                    await access.ensure_access()
                 if len(response.tool_calls) != 1:
                     raise LLMProviderError(
                         "The assistant could not complete a verified answer. Please try again."

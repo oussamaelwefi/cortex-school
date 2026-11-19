@@ -12,6 +12,7 @@ import { ErrorBox, Loading, Operation, useRemote } from "./ui";
 import { SchoolPoliciesButton } from "./reminders";
 import { AISettingsValues, InstructionalDays } from "./school-settings-values";
 import type { Endpoint } from "./types";
+import { ChatDataAccessControl } from "./chat-data-access";
 
 export function SchoolSettingsPage() {
   useLanguage();
@@ -54,6 +55,7 @@ export function SchoolSettingsPage() {
           <SchoolPoliciesButton />
         </div>
       </div>
+      <ChatDataAccessControl role="admin" />
       <section className="panel ss-section">
         <header>
           <div>

@@ -159,3 +159,16 @@ class GuardianWeeklyExplanationResponse(CustomBaseModel):
         default_factory=list,
         max_length=27,
     )
+
+
+class ChatDataPreferenceRequest(CustomBaseModel):
+    enabled: bool
+
+
+class ChatDataAccessResponse(CustomBaseModel):
+    school_data_enabled: bool
+    personal_data_enabled: bool
+    effective_data_enabled: bool
+    can_manage_school: bool
+    can_manage_personal: bool
+    revision: int

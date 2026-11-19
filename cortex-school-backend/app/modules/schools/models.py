@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
+    Integer,
     SmallInteger,
     String,
     Time,
@@ -78,6 +79,17 @@ class School(Base):
     ai_teacher_draft_enabled: Mapped[bool] = mapped_column(
         default=False,
         server_default="false",
+        nullable=False,
+    )
+    ai_chat_data_enabled: Mapped[bool] = mapped_column(
+        default=True,
+        server_default="true",
+        nullable=False,
+    )
+    ai_chat_data_revision: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
         nullable=False,
     )
     ai_teacher_draft_default_language: Mapped[str] = mapped_column(

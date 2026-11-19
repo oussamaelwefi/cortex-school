@@ -1,0 +1,87 @@
+.chat-access {
+  border: 1px solid var(--ui-line, #dfe7db);
+  border-radius: 14px;
+  padding: 15px 18px;
+  background: #ffffffc9;
+  color: var(--ui-text, #253d35);
+}
+.chat-workspace > .chat-access {
+  flex-shrink: 0;
+  position: relative;
+  margin: 0 24px 10px;
+  padding: 10px 14px;
+}
+.chat-access-heading,
+.chat-access-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chat-access-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.chat-access h2 {
+  font-size: 12px;
+  margin: 0;
+}
+.chat-access-heading > div > svg {
+  color: var(--ui-accent-ink, #214e40);
+  flex-shrink: 0;
+}
+.chat-access p {
+  font-size: 11px;
+  line-height: 1.65;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.chat-access-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 20px;
+  padding: 4px 9px;
+  font-size: 10px;
+  color: var(--ui-accent-ink, #214e40);
+  background: var(--ui-accent-soft, #edf3e9);
+}
+.chat-access-status.disabled {
+  background: #f1f1f3;
+  color: #63636f;
+}
+.chat-access-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 9px;
+}
+.chat-access-toggle input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--ui-accent, #214e40);
+}
+.chat-access .chat-access-note {
+  color: var(--ui-muted, #71816e);
+}
+.chat-access-error {
+  color: #a74f43;
+}
+.school-settings-page > .chat-access {
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .chat-workspace > .chat-access {
+    margin: 0 12px 8px;
+    padding: 9px 11px;
+  }
+  .chat-access p {
+    font-size: 10px;
+  }
+  .chat-access-heading {
+    gap: 6px;
+  }
+}

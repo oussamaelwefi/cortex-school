@@ -224,12 +224,53 @@ retrieved again. The entire model/tool loop has a 50-second deadline and eight-s
 limit. Source IDs are checked against actual results; model wording still needs
 the user's usual review.
 
-Deploy the backend and frontend together. No migration or new worker task is
-needed. The backend needs `WORKOS_API_KEY` and the existing LLM configuration
+Deploy the backend and frontend together and run `python -m alembic upgrade head`
+from `/app` before using chat privacy controls (migration `b4c6d8e0f2a3`). No new
+worker task is needed. The backend needs `WORKOS_API_KEY` and the existing LLM configuration
 (`OPENROUTER_API_KEY` + `OPENROUTER_MODEL`, or `OPENAI_API_KEY`). Use a model with
 function/tool calling; the project's configured `openai/gpt-4.1-mini` can use this
 request format. Generic writing help needs no database lookup. Membership or
 provider failures return a safe error rather than an unverified data answer.
+
+### Chat data privacy controls
+
+Administrators can switch school-data access on/off from **School settings** or
+the chat's **School data access** panel. Guardians have a personal switch in that
+panel. The persisted default preserves existing access until explicitly turned
+off. The school switch blocks both record and policy tools for every role;
+general writing help remains available. Each guardian's preference belongs to
+their user ID and school, and survives school-wide disable/re-enable operations.
+
+`GET /api/ai/chat/access/?role=guardian` reads effective access. Guardians save
+their own preference with `PUT /api/ai/chat/access/` and `{ "enabled": false }`.
+Administrators save the school switch with
+`PUT /api/school/chat-data-settings` and the same body. Caller-controlled guardian
+or organization IDs are not accepted. Updates require a verified active WorkOS
+membership, with `school:manage` required for the school-wide setting. Responses
+use `Cache-Control: no-store`.
+
+A guardian opt-out excludes their member profile, owned registration requests,
+linked children, enrollments, attendance, student updates, acknowledgements and
+related publications from **every role's chat tools**, including administrators.
+One opt-out protects a shared child even if another guardian opts in. Shared
+updates/publications that include a protected recipient are withheld as a whole
+so their free text cannot expose that family's details. Invitation records are
+withheld from chat when any school guardian opts out: email-only invitations
+cannot reliably be matched to a stable guardian identity. The normal invitation
+screen is unaffected. General school policies, academic years, classes and
+calendars remain institutional data for otherwise authorized users.
+
+Filtering occurs in SQL before pagination and aggregates, or before member
+directory filtering/counting. The model receives no excluded rows or excluded-row
+counts. Its tool arguments cannot override these guards. Each lookup rechecks
+effective access and the school's privacy revision; a concurrent preference
+change discards the result. The model loop checks again before/after provider
+calls and rejects stale answers. There is no saved server-side chat transcript.
+The client sends prior user questions, never prior AI answers, and clears the
+visible conversation when it observes a new privacy revision (including on window
+focus). Already returned information cannot be recalled from a recipient or
+provider; changes govern subsequent lookups and stop stale in-flight responses.
+These controls apply to this chat feature, independently of the other AI features.
 
 ## Folders
 

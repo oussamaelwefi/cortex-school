@@ -6,7 +6,8 @@ export function schoolChatPayload(
   conversation: { id: string; role: "user" | "assistant"; text: string }[],
 ) {
   const recent = conversation
-    .filter((message) => message.id !== "welcome")
+    // Never replay retrieved answers: consent may have changed since that turn.
+    .filter((message) => message.role === "user")
     .slice(-12);
   const included: string[] = [];
   let size = 0;

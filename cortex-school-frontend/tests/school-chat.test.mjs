@@ -37,9 +37,15 @@ test("chat payload sends the workspace separately and keeps bounded recent histo
     result.message,
     /0: a|no school-data tools|The user is a/,
   );
+  const privateAnswer = schoolChatPayload("admin", "en", [
+    { id: "q1", role: "user", text: "Who is absent?" },
+    { id: "a1", role: "assistant", text: "PRIVATE CHILD RECORD [S1]" },
+    latest,
+  ]);
+  assert.doesNotMatch(privateAnswer.message, /PRIVATE CHILD RECORD/);
 });
 
-async function mount(t, role, failOnce = false) {
+async function mount(t, role, failOnce = false, options = {}) {
   const dom = new JSDOM(
     "<!doctype html><html><body><div id='root'></div></body></html>",
     { url: "http://localhost/chat" },
@@ -57,7 +63,27 @@ async function mount(t, role, failOnce = false) {
   const { createRoot } = await import("react-dom/client");
   const root = createRoot(document.getElementById("root"));
   let attempts = 0;
-  const api = t.mock.fn(async () => {
+  const state = {
+    school_data_enabled: true,
+    personal_data_enabled: true,
+    effective_data_enabled: true,
+    can_manage_school: role === "admin",
+    can_manage_personal: role === "guardian",
+    revision: 0,
+  };
+  const api = t.mock.fn(async (endpoint, params, body) => {
+    if (endpoint.path === "/ai/chat/access/" && endpoint.method === "GET")
+      return { ...state };
+    if (endpoint.method === "PUT") {
+      if (options.failSave) throw Error("Unable to save preference");
+      state[
+        role === "admin" ? "school_data_enabled" : "personal_data_enabled"
+      ] = body.enabled;
+      state.effective_data_enabled =
+        state.school_data_enabled && state.personal_data_enabled;
+      state.revision++;
+      return { ...state };
+    }
     if (failOnce && ++attempts === 1)
       throw Error("School data is temporarily unavailable. Please try again.");
     return {
@@ -77,6 +103,7 @@ async function mount(t, role, failOnce = false) {
       ],
     };
   });
+  api.privacy = state;
   await act(async () =>
     root.render(
       h(
@@ -102,7 +129,9 @@ for (const role of ["admin", "teacher", "guardian"]) {
     await act(async () =>
       document.querySelectorAll(".chat-suggestions button")[1].click(),
     );
-    const [endpoint, , payload] = api.mock.calls[0].arguments;
+    const [endpoint, , payload] = api.mock.calls.find(
+      (c) => c.arguments[0].method === "POST",
+    ).arguments;
     assert.equal(endpoint.path, "/ai/chat/");
     assert.equal(payload.role, role);
     assert.equal(payload.language, "en");
@@ -129,12 +158,78 @@ test("a failed lookup keeps the question and retries it without duplicating the 
   );
   assert.ok(document.querySelector('[role="alert"]'));
   await act(async () => document.querySelector(".chat-error button").click());
-  assert.equal(api.mock.callCount(), 2);
-  assert.deepEqual(
-    api.mock.calls[0].arguments[2],
-    api.mock.calls[1].arguments[2],
-  );
+  const posts = api.mock.calls.filter((c) => c.arguments[0].method === "POST");
+  assert.equal(posts.length, 2);
+  assert.deepEqual(posts[0].arguments[2], posts[1].arguments[2]);
   assert.equal(document.querySelectorAll(".chat-message.user").length, 1);
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.ok(document.querySelector(".chat-sources"));
+});
+
+for (const role of ["admin", "guardian"]) {
+  test(`${role} can disable data access and clear old sourced answers`, async (t) => {
+    const api = await mount(t, role);
+    await act(async () =>
+      document.querySelectorAll(".chat-suggestions button")[1].click(),
+    );
+    assert.ok(document.querySelector(".chat-sources"));
+    await act(async () => document.querySelector('[role="switch"]').click());
+    assert.equal(document.querySelector('[role="switch"]').checked, false);
+    assert.equal(document.querySelector(".chat-sources"), null);
+    assert.equal(
+      document.querySelectorAll(".chat-suggestions button").length,
+      1,
+    );
+    assert.match(
+      document.querySelector(".chat-access-status").textContent,
+      /Data access off/,
+    );
+    const update = api.mock.calls.find(
+      (c) => c.arguments[0].method === "PUT",
+    ).arguments;
+    assert.equal(
+      update[0].path,
+      role === "admin" ? "/school/chat-data-settings" : "/ai/chat/access/",
+    );
+    assert.deepEqual(update[2], { enabled: false });
+    await act(async () => document.querySelector('[role="switch"]').click());
+    assert.equal(
+      document.querySelectorAll(".chat-suggestions button").length,
+      3,
+    );
+  });
+}
+
+test("teacher sees data access status without a setting they cannot change", async (t) => {
+  await mount(t, "teacher");
+  assert.ok(document.querySelector(".chat-access-status"));
+  assert.equal(document.querySelector('[role="switch"]'), null);
+});
+
+test("a failed privacy save preserves the last confirmed preference", async (t) => {
+  await mount(t, "guardian", false, { failSave: true });
+  await act(async () => document.querySelector('[role="switch"]').click());
+  assert.equal(document.querySelector('[role="switch"]').checked, true);
+  assert.match(
+    document.querySelector('.chat-access [role="alert"]').textContent,
+    /Unable to save preference/,
+  );
+  assert.match(
+    document.querySelector(".chat-access-status").textContent,
+    /Data access on/,
+  );
+});
+
+test("returning to the chat refreshes external privacy changes and clears old results", async (t) => {
+  const api = await mount(t, "guardian");
+  await act(async () =>
+    document.querySelectorAll(".chat-suggestions button")[1].click(),
+  );
+  api.privacy.personal_data_enabled = false;
+  api.privacy.effective_data_enabled = false;
+  api.privacy.revision++;
+  await act(async () => window.dispatchEvent(new window.Event("focus")));
+  assert.equal(document.querySelector(".chat-sources"), null);
+  assert.equal(document.querySelector('[role="switch"]').checked, false);
+  assert.equal(document.querySelectorAll(".chat-suggestions button").length, 1);
 });

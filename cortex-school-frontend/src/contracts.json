@@ -370,6 +370,51 @@
     "upload": false
   },
   {
+    "id": "get_chat_data_access",
+    "title": "Get chat data access",
+    "method": "GET",
+    "path": "/ai/chat/access/",
+    "module": "ai",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "admin",
+          "teacher",
+          "guardian"
+        ],
+        "nullable": true,
+        "name": "role",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "set_guardian_chat_data_access",
+    "title": "Set guardian chat data access",
+    "method": "PUT",
+    "path": "/ai/chat/access/",
+    "module": "ai",
+    "role": "guardian",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "required": true
+        }
+      },
+      "name": "ChatDataPreferenceRequest"
+    },
+    "upload": false
+  },
+  {
     "id": "chat",
     "title": "Chat",
     "method": "POST",
@@ -2099,6 +2144,26 @@
         }
       },
       "name": "ReminderApproval"
+    },
+    "upload": false
+  },
+  {
+    "id": "set_school_chat_data_access",
+    "title": "Set school chat data access",
+    "method": "PUT",
+    "path": "/school/chat-data-settings",
+    "module": "schools",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "required": true
+        }
+      },
+      "name": "ChatDataPreferenceRequest"
     },
     "upload": false
   },

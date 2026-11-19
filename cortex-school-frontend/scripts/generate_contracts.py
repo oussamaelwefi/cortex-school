@@ -126,7 +126,7 @@ for path,tree in trees.items():
             body = None
             upload = False
             for arg,default in zip(n.args.args,defaults):
-                if arg.arg in ('session','current_user','request'):
+                if arg.arg in ('session','current_user','request','response'):
                     continue
                 if arg.arg == 'payload':
                     body = schema(arg.annotation)
@@ -142,6 +142,8 @@ for path,tree in trees.items():
                 params.append(info)
             role = 'onboarding' if module == 'onboarding' and not url.endswith(('/approve', '/reject')) else 'operator' if module == 'onboarding' else 'guardian' if url.startswith('/guardian') else 'teacher' if url.startswith('/teacher') or url=='/ai/teacher-update-draft/' else 'shared' if url in ('/ai/chat/', '/school/context') or url.startswith('/publications/inbox/') else 'admin'
             routes.append({'id':n.name,'title':n.name.replace('_',' ').capitalize(),'method':d.func.attr.upper(),'path':url,'module':module,'role':role,'params':params,'body':body,'upload':upload})
+            if url == '/ai/chat/access/':
+                routes[-1]['role'] = 'guardian' if d.func.attr == 'put' else 'shared'
 target = Path(__file__).resolve().parents[1]/'src/contracts.json'
 target.write_text(json.dumps(routes,indent=2),encoding='utf-8')
 print(f'Generated {len(routes)} business endpoint contracts in {target}')

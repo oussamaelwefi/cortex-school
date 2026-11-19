@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import { findEndpoint, useApi } from "./api";
 import { getChatContent } from "./chat-content.mjs";
 import { schoolChatPayload } from "./chat-request";
+import { ChatDataAccessControl } from "./chat-data-access";
 import type { Role } from "./types";
 import "./chat.css";
 
@@ -52,6 +53,9 @@ export function ChatAssistant({ role }: { role: Role }) {
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [speaking, setSpeaking] = useState("");
   const lock = useRef(false);
+  const privacyRevision = useRef<number | null>(null);
+  const generation = useRef(0);
+  const [dataEnabled, setDataEnabled] = useState<boolean | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -60,6 +64,10 @@ export function ChatAssistant({ role }: { role: Role }) {
   const active = useRef(true);
   const speechSupported =
     typeof window !== "undefined" && "speechSynthesis" in window;
+  const messageText = (message: Message) =>
+    message.id === "welcome" && dataEnabled === false
+      ? "Hello! I can help with writing and general questions. School data lookups are currently turned off for this chat."
+      : message.text;
 
   useEffect(() => {
     active.current = true;
@@ -90,6 +98,7 @@ export function ChatAssistant({ role }: { role: Role }) {
     const content = text.trim();
     if (!content || lock.current) return;
     lock.current = true;
+    const version = generation.current;
     setBusy(true);
     setError("");
     setFailed("");
@@ -118,7 +127,7 @@ export function ChatAssistant({ role }: { role: Role }) {
         throw new Error(
           t("The assistant returned an empty response. Please try again."),
         );
-      if (active.current)
+      if (active.current && version === generation.current)
         setMessages((current) => [
           ...current,
           {
@@ -130,7 +139,7 @@ export function ChatAssistant({ role }: { role: Role }) {
           },
         ]);
     } catch (e) {
-      if (active.current) {
+      if (active.current && version === generation.current) {
         setError((e as Error).message);
         setFailed(content);
       }
@@ -144,7 +153,9 @@ export function ChatAssistant({ role }: { role: Role }) {
   }
   async function copy(message: Message) {
     try {
-      await navigator.clipboard.writeText(message.text);
+      await navigator.clipboard.writeText(
+        message.id === "welcome" ? t(messageText(message)) : message.text,
+      );
       setCopied(message.id);
       clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(""), 2000);
@@ -162,7 +173,7 @@ export function ChatAssistant({ role }: { role: Role }) {
       return;
     }
     const speech = new SpeechSynthesisUtterance(
-      message.id === "welcome" ? t(message.text) : message.text,
+      message.id === "welcome" ? t(messageText(message)) : message.text,
     );
     speech.lang = getLocale();
     speech.onend = () => setSpeaking("");
@@ -205,6 +216,27 @@ export function ChatAssistant({ role }: { role: Role }) {
           {t(" New chat ")}
         </button>
       </header>
+      <ChatDataAccessControl
+        role={role}
+        disabled={busy}
+        onChange={(access) => {
+          setDataEnabled(access.effective_data_enabled);
+          if (
+            privacyRevision.current !== null &&
+            privacyRevision.current !== access.revision
+          ) {
+            generation.current++;
+            if (speechSupported) window.speechSynthesis.cancel();
+            setSpeaking("");
+            setMessages([welcome(role)]);
+            setError("");
+            setFailed("");
+            setCopied("");
+            setLiked(new Set());
+          }
+          privacyRevision.current = access.revision;
+        }}
+      />
       <div
         className="chat-thread"
         ref={list}
@@ -227,7 +259,7 @@ export function ChatAssistant({ role }: { role: Role }) {
             )}
             <div className="chat-message-content">
               <div className="chat-bubble">
-                {m.id === "welcome" ? t(m.text) : m.text}
+                {m.id === "welcome" ? t(messageText(m)) : m.text}
               </div>
               {!!m.sources?.length && (
                 <section
@@ -332,7 +364,7 @@ export function ChatAssistant({ role }: { role: Role }) {
         ))}
         {messages.length === 1 && !busy && (
           <div className="chat-suggestions">
-            {suggestions.map((s) => (
+            {(dataEnabled ? suggestions : suggestions.slice(0, 1)).map((s) => (
               <button key={s} onClick={() => send(t(s))}>
                 {t(s)}
                 <ArrowUpRight size={13} />
