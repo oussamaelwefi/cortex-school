@@ -18,7 +18,8 @@ def _get_structured_chain(schema):
         model=settings.llm.OPENROUTER_MODEL,
         temperature=settings.llm.OPENROUTER_TEMPERATURE,
         max_tokens=settings.llm.OPENROUTER_MAX_TOKENS,
-        timeout=settings.llm.OPENROUTER_TIMEOUT_SECONDS,
+        # ChatOpenRouter uses milliseconds (the OpenAI adapter uses seconds).
+        timeout=max(1, round(settings.llm.OPENROUTER_TIMEOUT_SECONDS * 1000)),
         max_retries=settings.llm.OPENROUTER_MAX_RETRIES,
         openrouter_provider={
             "require_parameters": True,

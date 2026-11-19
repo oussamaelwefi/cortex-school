@@ -57,6 +57,10 @@ export function makeApi(
       payload = JSON.stringify(body);
     }
     async function send(accessToken: string) {
+      const isAiRequest = e.module === "ai";
+      const signal = AbortSignal.timeout(
+        e.timeoutMs ?? (isAiRequest ? 65000 : 30000),
+      );
       try {
         return await fetch(
           endpointUrl(import.meta.env.VITE_API_BASE_URL || "/api", e, params),
@@ -64,10 +68,17 @@ export function makeApi(
             method: e.method,
             headers: { ...headers, Authorization: `Bearer ${accessToken}` },
             body: payload,
-            signal: AbortSignal.timeout(e.timeoutMs ?? 30000),
+            signal,
           },
         );
-      } catch {
+      } catch (error) {
+        if (signal.aborted || (error as Error)?.name === "TimeoutError") {
+          throw new Error(
+            isAiRequest
+              ? "AI generation took too long. Your text has been kept. Please try again."
+              : "The request timed out. Please try again.",
+          );
+        }
         throw new Error(
           "Unable to reach the school server. Check that the backend is running and try again.",
         );
@@ -92,7 +103,10 @@ export function makeApi(
         throw rejectSession(response.headers.get("X-Request-ID") ?? requestId);
     }
     if (response.status === 204) return null;
-    if (response.ok && response.headers.get("Content-Type")?.startsWith("application/pdf"))
+    if (
+      response.ok &&
+      response.headers.get("Content-Type")?.startsWith("application/pdf")
+    )
       return response.blob();
     const result = await response.json().catch(() => null);
     if (!response.ok)

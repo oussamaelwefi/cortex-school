@@ -87,6 +87,19 @@ The assistant uses OpenRouter when `OPENROUTER_API_KEY` is set, otherwise OpenAI
 Do not put an OpenRouter key in `OPENAI_API_KEY`. Teacher drafts and guardian
 weekly explanations also use the OpenRouter settings.
 
+`OPENROUTER_TIMEOUT_SECONDS` is expressed in seconds; the structured-output adapter
+converts it to the milliseconds expected by `ChatOpenRouter`. Teacher draft model
+calls have an overall 45-second deadline (`AI_TEACHER_DRAFT_TIMEOUT_SECONDS`, maximum
+50), below the frontend proxy timeout. AI requests have a separate 65-second browser
+budget, and timeouts are reported separately from connection failures.
+
+The AI rate limiter uses `AI_TEACHER_DRAFT_REDIS_URL` when provided, otherwise
+`CELERY_BROKER_URL`. On Railway, these must point to the reachable Redis service;
+the API needs this connection as well as `OPENROUTER_API_KEY`. Redis connection and
+command waits are bounded, and unavailable rate limiting blocks generation rather
+than bypassing the limits. Authentication/model configuration errors and provider
+timeouts return safe, actionable errors. The entered observations stay in the form.
+
 After changing environment variables, recreate the API container:
 
 ```bash

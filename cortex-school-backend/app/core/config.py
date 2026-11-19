@@ -1,6 +1,8 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
+
 from .configs.base import ModelConfig
 from .configs.database import DatabaseConfig
 from .configs.llm import LLMConfig
@@ -13,7 +15,8 @@ class Settings(ModelConfig):
     ADMIN_AUTH_REDIRECT_URI: str = ""
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
-    AI_TEACHER_DRAFT_REDIS_URL: str = "redis://redis:6379/2"
+    AI_TEACHER_DRAFT_REDIS_URL: str = ""
+    AI_TEACHER_DRAFT_TIMEOUT_SECONDS: float = Field(default=45, gt=0, le=50)
     AI_TEACHER_DRAFT_RATE_WINDOW_SECONDS: int = 600
     AI_TEACHER_DRAFT_USER_RATE_LIMIT: int = 10
     AI_TEACHER_DRAFT_ORGANIZATION_RATE_LIMIT: int = 100

@@ -7,6 +7,8 @@ from typing import Any, TypeVar
 
 from fastapi import HTTPException, status
 from redis import asyncio as redis_asyncio
+from redis.asyncio.retry import Retry
+from redis.backoff import NoBackoff
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai.openrouter import (
@@ -72,6 +74,8 @@ def _safe_error_category(error: Exception) -> str:
     name = type(error).__name__.lower()
     if "timeout" in name:
         return "timeout"
+    if getattr(error, "status_code", None) in {400, 401, 402, 403, 404, 422}:
+        return "provider_configuration"
     if "rate" in name or "429" in str(error):
         return "provider_rate_limit"
     if isinstance(error, ValueError) or "parse" in name or "validation" in name:
@@ -126,19 +130,27 @@ async def _consume_rate_limit(
     organization_key = f"ai:{namespace}:organization:{organization_id}:{bucket}"
     client = None
     try:
-        client = redis_asyncio.from_url(settings.AI_TEACHER_DRAFT_REDIS_URL)
-        async with client.pipeline(transaction=True) as pipeline:
-            pipeline.incr(user_key)
-            pipeline.incr(organization_key)
-            pipeline.expire(user_key, ttl)
-            pipeline.expire(organization_key, ttl)
-            user_count, organization_count, _, _ = await pipeline.execute()
+        client = redis_asyncio.from_url(
+            settings.AI_TEACHER_DRAFT_REDIS_URL or settings.CELERY_BROKER_URL,
+            socket_connect_timeout=2,
+            socket_timeout=2,
+            retry_on_timeout=False,
+            retry=Retry(NoBackoff(), 0),
+        )
+        async with asyncio.timeout(3):
+            async with client.pipeline(transaction=True) as pipeline:
+                pipeline.incr(user_key)
+                pipeline.incr(organization_key)
+                pipeline.expire(user_key, ttl)
+                pipeline.expire(organization_key, ttl)
+                user_count, organization_count, _, _ = await pipeline.execute()
     except Exception as exc:
         raise RateLimitUnavailableError from exc
     finally:
         if client is not None:
             try:
-                await client.aclose()
+                async with asyncio.timeout(1):
+                    await client.aclose()
             except Exception:
                 pass
 
@@ -266,10 +278,11 @@ class TeacherUpdateDraftService:
 
         try:
             draft_chain = chain if chain is not None else get_teacher_update_draft_chain()
-            result, token_usage = _extract_chain_result(
-                await draft_chain.ainvoke(prompt),
-                TeacherUpdateDraftResult,
-            )
+            async with asyncio.timeout(settings.AI_TEACHER_DRAFT_TIMEOUT_SECONDS):
+                result, token_usage = _extract_chain_result(
+                    await draft_chain.ainvoke(prompt),
+                    TeacherUpdateDraftResult,
+                )
             if _contains_unsafe_output(result):
                 log_event(
                     outcome="failed",
@@ -291,7 +304,18 @@ class TeacherUpdateDraftService:
                 detail="AI drafting is not configured. Continue with the manual composer.",
             )
         except Exception as exc:
-            log_event(outcome="failed", error_category=_safe_error_category(exc))
+            category = _safe_error_category(exc)
+            log_event(outcome="failed", error_category=category)
+            if category == "timeout":
+                raise HTTPException(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail="AI drafting timed out. Please try again or continue with the manual composer.",
+                ) from exc
+            if category == "provider_configuration":
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="AI drafting configuration needs attention. Contact your school administrator or use the manual composer.",
+                ) from exc
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="AI drafting is temporarily unavailable. Continue with the manual composer.",

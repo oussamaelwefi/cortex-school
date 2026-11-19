@@ -432,6 +432,9 @@ export function Operation({
               )}
             </>
           )}
+          {busy && e.id === "create_teacher_update_draft" && (
+            <p className="prose" role="status">{t("Generating the draft… This may take a few moments.")}</p>
+          )}
           {error && <ErrorBox error={t(error)} />}
         </div>
         <footer>

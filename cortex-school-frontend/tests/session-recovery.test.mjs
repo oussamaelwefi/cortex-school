@@ -26,6 +26,7 @@ test("school API session recovery", async (suite) => {
   const students = findEndpoint("GET", "/students/");
   const academicYears = findEndpoint("GET", "/academic-years/");
   const chat = findEndpoint("POST", "/ai/chat/");
+  const draft = findEndpoint("POST", "/ai/teacher-update-draft/");
   const policy = findEndpoint("GET", "/guardian/family/policies/{document_id}/pdf/");
 
   await suite.test("invitation import sends the role mode alongside the multipart CSV", async (t) => {
@@ -53,6 +54,40 @@ test("school API session recovery", async (suite) => {
     const file = await api(policy, { document_id: "pol-1" });
     assert.equal(file.type, "application/pdf");
     assert.deepEqual(new Uint8Array(await file.arrayBuffer()), bytes);
+  });
+
+  await suite.test("slow AI responses can finish after the normal school request deadline", async (t) => {
+    const timeout = AbortSignal.timeout.bind(AbortSignal);
+    const budgets = [];
+    t.mock.method(AbortSignal, "timeout", (milliseconds) => {
+      budgets.push(milliseconds);
+      // Compress time: the reply comes after the regular deadline but before
+      // the AI deadline, without spending 30 seconds in a unit test.
+      return timeout(milliseconds === 30000 ? 5 : 100);
+    });
+    t.mock.method(globalThis, "fetch", (_url, { signal }) => new Promise((resolve, reject) => {
+      const onAbort = () => { clearTimeout(timer); reject(signal.reason); };
+      const timer = setTimeout(() => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(Response.json({ outcome: "draft", title: "Welcome", body: "Welcome to the class.", questions: [] }));
+      }, 20);
+      signal.addEventListener("abort", onAbort, { once: true });
+    }));
+    const api = makeApi(async () => "valid", t.mock.fn());
+    assert.equal((await api(draft, {}, { observations: "Welcome" })).outcome, "draft");
+    await assert.rejects(api(students), /request timed out/);
+    assert.deepEqual(budgets, [65000, 30000]);
+  });
+
+  await suite.test("AI timeouts and network failures have different messages without replaying generation", async (t) => {
+    const rejected = t.mock.fn();
+    const fetch = t.mock.method(globalThis, "fetch", async () => { throw new DOMException("Deadline exceeded", "TimeoutError"); });
+    const api = makeApi(async () => "valid", rejected);
+    await assert.rejects(api(draft, {}, {}), /AI generation took too long.*text has been kept/);
+    assert.equal(fetch.mock.callCount(), 1);
+    fetch.mock.mockImplementation(async () => { throw new TypeError("Failed to fetch"); });
+    await assert.rejects(api(draft, {}, {}), /Unable to reach the school server/);
+    assert.equal(rejected.mock.callCount(), 0);
   });
 
   await suite.test("concurrent Bearer 401s share a refresh", async (t) => {

@@ -1,6 +1,8 @@
+import asyncio
 import os
 import uuid
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock
 
 os.environ.setdefault("POSTGRES_USER", "postgres")
 os.environ.setdefault("POSTGRES_PASSWORD", "root")
@@ -131,7 +133,7 @@ def test_openrouter_chain_requires_strict_json_schema_and_provider_controls(monk
 
     chain = openrouter.get_teacher_update_draft_chain()
 
-    assert chain.kwargs["timeout"] == 20
+    assert chain.kwargs["timeout"] == 20000
     assert chain.kwargs["max_retries"] == 1
     assert chain.kwargs["openrouter_provider"] == {
         "require_parameters": True,
@@ -424,7 +426,8 @@ async def test_provider_timeout_returns_manual_fallback(monkeypatch):
             chain=_TimeoutChain(),
         )
 
-    assert error.value.status_code == 503
+    assert error.value.status_code == 504
+    assert "timed out" in error.value.detail
 
 
 @pytest.mark.asyncio
@@ -470,3 +473,97 @@ async def test_rate_limit_failure_is_manual_fallback(monkeypatch):
         )
 
     assert error.value.status_code == 429
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("override", ["", "redis://dedicated.test:6379/2"])
+async def test_rate_limiter_uses_working_broker_configuration_and_preserves_limits(monkeypatch, override):
+    monkeypatch.setattr(settings, "AI_TEACHER_DRAFT_REDIS_URL", override)
+    monkeypatch.setattr(settings, "CELERY_BROKER_URL", "redis://broker.test:6379/0")
+    monkeypatch.setattr(settings, "AI_TEACHER_DRAFT_USER_RATE_LIMIT", 10)
+    monkeypatch.setattr(settings, "AI_TEACHER_DRAFT_ORGANIZATION_RATE_LIMIT", 100)
+    pipeline = SimpleNamespace(
+        incr=Mock(), expire=Mock(), execute=AsyncMock(return_value=[1, 1, True, True]),
+    )
+
+    class Context:
+        async def __aenter__(self): return pipeline
+        async def __aexit__(self, *args): return False
+
+    client = SimpleNamespace(pipeline=Mock(return_value=Context()), aclose=AsyncMock())
+    factory = Mock(return_value=client)
+    monkeypatch.setattr(draft_services.redis_asyncio, "from_url", factory)
+    await draft_services._consume_rate_limit("org-test", "teacher-test")
+    assert factory.call_args.args == (override or "redis://broker.test:6379/0",)
+    assert factory.call_args.kwargs["socket_connect_timeout"] == 2
+    assert factory.call_args.kwargs["socket_timeout"] == 2
+    assert pipeline.incr.call_count == 2
+    assert pipeline.expire.call_count == 2
+    assert all("org-test" in call.args[0] for call in pipeline.incr.call_args_list)
+    client.aclose.assert_awaited_once()
+    pipeline.execute.return_value = [11, 1, True, True]
+    with pytest.raises(draft_services.RateLimitExceededError):
+        await draft_services._consume_rate_limit("org-test", "teacher-test")
+
+
+@pytest.mark.asyncio
+async def test_stalled_redis_fails_closed_before_the_browser_deadline(monkeypatch):
+    cancelled = False
+
+    class Pipeline:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return False
+        def incr(self, key): pass
+        def expire(self, key, ttl): pass
+        async def execute(self):
+            nonlocal cancelled
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled = True
+
+    client = SimpleNamespace(pipeline=lambda **kwargs: Pipeline(), aclose=AsyncMock())
+    monkeypatch.setattr(draft_services.redis_asyncio, "from_url", lambda *args, **kwargs: client)
+    with pytest.raises(draft_services.RateLimitUnavailableError):
+        await asyncio.wait_for(draft_services._consume_rate_limit("org-test", "teacher-test"), timeout=4.5)
+    assert cancelled
+    client.aclose.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["stalled", "credentials", "model"])
+async def test_generation_deadline_and_provider_configuration_failures_are_safe(monkeypatch, failure):
+    request = _request()
+    monkeypatch.setattr(draft_services, "_require_teacher_access", lambda user: ("teacher-test", "org-test"))
+    monkeypatch.setattr(draft_services, "_resolve_teacher_update_audience", AsyncMock(return_value=(
+        SimpleNamespace(id=request.classroom_id, name="Demo"),
+        [(SimpleNamespace(first_name="Ada"), SimpleNamespace())],
+        StudentUpdateTargetType.STUDENTS,
+    )))
+    monkeypatch.setattr(draft_services, "_consume_rate_limit", AsyncMock())
+    monkeypatch.setattr(settings, "AI_TEACHER_DRAFT_TIMEOUT_SECONDS", 0.02)
+    cancelled = False
+
+    class Chain:
+        async def ainvoke(self, prompt):
+            nonlocal cancelled
+            if failure != "stalled":
+                error = RuntimeError("private-provider-response")
+                error.status_code = 401 if failure == "credentials" else 404
+                raise error
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled = True
+
+    with pytest.raises(HTTPException) as error:
+        await draft_services.teacher_update_draft_service.generate(
+            session=_FakeSession(SimpleNamespace(ai_teacher_draft_enabled=True, ai_teacher_draft_default_language="fr")),
+            payload=request, current_user={}, request_id="test-request", chain=Chain(),
+        )
+    assert error.value.status_code == (504 if failure == "stalled" else 503)
+    assert "private-provider-response" not in error.value.detail
+    if failure == "stalled":
+        assert cancelled
+    else:
+        assert "configuration needs attention" in error.value.detail

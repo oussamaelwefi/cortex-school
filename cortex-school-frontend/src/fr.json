@@ -1254,5 +1254,15 @@
   "The invitation is being sent in the background. Its status updates automatically.": "L’invitation est en cours d’envoi en arrière-plan. Son statut se met à jour automatiquement.",
   "The invitation is queued. Its status will update automatically here.": "L’invitation a été mise en file d’envoi. Son statut se mettra à jour automatiquement sur cette page.",
   "Status updates automatically": "Mise à jour automatique du statut",
-  "Invitation status could not be synchronized. Please try again.": "Impossible de synchroniser l’état des invitations. Veuillez réessayer."
+  "Invitation status could not be synchronized. Please try again.": "Impossible de synchroniser l’état des invitations. Veuillez réessayer.",
+  "Unable to reach the school server. Check that the backend is running and try again.": "Impossible de joindre le serveur de l’école. Vérifiez votre connexion, puis réessayez.",
+  "AI generation took too long. Your text has been kept. Please try again.": "La génération IA a pris trop de temps. Votre texte a été conservé. Veuillez réessayer.",
+  "The request timed out. Please try again.": "Le délai d’attente de la requête a été dépassé. Veuillez réessayer.",
+  "AI drafting timed out. Please try again or continue with the manual composer.": "La génération du brouillon a dépassé le délai prévu. Réessayez ou poursuivez la rédaction manuellement.",
+  "AI drafting is temporarily unavailable. Continue with the manual composer.": "L’aide à la rédaction IA est temporairement indisponible. Vous pouvez poursuivre la rédaction manuellement.",
+  "AI drafting is not configured. Continue with the manual composer.": "L’aide à la rédaction IA n’est pas configurée pour le moment. Vous pouvez poursuivre la rédaction manuellement.",
+  "AI teacher drafting is disabled for this school": "L’aide à la rédaction IA est désactivée pour cet établissement.",
+  "AI draft limit reached. Continue with the manual composer.": "La limite de génération de brouillons IA a été atteinte. Vous pouvez poursuivre la rédaction manuellement.",
+  "Generating the draft… This may take a few moments.": "Création du brouillon… Cela peut prendre quelques dizaines de secondes.",
+  "AI drafting configuration needs attention. Contact your school administrator or use the manual composer.": "La configuration de l’aide à la rédaction IA doit être vérifiée. Contactez l’administrateur ou poursuivez la rédaction manuellement."
 }
