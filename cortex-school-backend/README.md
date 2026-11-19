@@ -87,9 +87,14 @@ The assistant uses OpenRouter when `OPENROUTER_API_KEY` is set, otherwise OpenAI
 Do not put an OpenRouter key in `OPENAI_API_KEY`. Teacher drafts and guardian
 weekly explanations also use the OpenRouter settings.
 
-`OPENROUTER_TIMEOUT_SECONDS` is expressed in seconds; the structured-output adapter
-converts it to the milliseconds expected by `ChatOpenRouter`. Teacher draft model
-calls have an overall 45-second deadline (`AI_TEACHER_DRAFT_TIMEOUT_SECONDS`, maximum
+Teacher drafts and guardian weekly explanations use `ChatOpenAI` with OpenRouter's
+compatible endpoint, the same adapter as the chat. Its Pydantic serializer makes
+all properties required for strict JSON output, keeps nullable fields, and removes
+unsupported null defaults. Responses still pass the Pydantic business validators;
+provider parameter requirements and the data-collection restriction stay enabled.
+
+`OPENROUTER_TIMEOUT_SECONDS` is expressed in seconds, as expected by this adapter.
+Teacher draft model calls have an overall 45-second deadline (`AI_TEACHER_DRAFT_TIMEOUT_SECONDS`, maximum
 50), below the frontend proxy timeout. AI requests have a separate 65-second browser
 budget, and timeouts are reported separately from connection failures.
 

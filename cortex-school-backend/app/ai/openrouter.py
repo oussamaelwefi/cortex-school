@@ -1,4 +1,4 @@
-from langchain_openrouter import ChatOpenRouter
+from langchain_openai import ChatOpenAI
 
 from core.config import settings
 
@@ -13,17 +13,21 @@ def _get_structured_chain(schema):
     if not settings.llm.OPENROUTER_MODEL:
         raise OpenRouterNotConfiguredError("OPENROUTER_MODEL is not configured")
 
-    model = ChatOpenRouter(
+    # Use the chat adapter's Pydantic serializer: strict schemas require every
+    # property to be present, including nullable fields and empty lists.
+    model = ChatOpenAI(
         api_key=settings.llm.OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
         model=settings.llm.OPENROUTER_MODEL,
         temperature=settings.llm.OPENROUTER_TEMPERATURE,
         max_tokens=settings.llm.OPENROUTER_MAX_TOKENS,
-        # ChatOpenRouter uses milliseconds (the OpenAI adapter uses seconds).
-        timeout=max(1, round(settings.llm.OPENROUTER_TIMEOUT_SECONDS * 1000)),
+        timeout=settings.llm.OPENROUTER_TIMEOUT_SECONDS,
         max_retries=settings.llm.OPENROUTER_MAX_RETRIES,
-        openrouter_provider={
-            "require_parameters": True,
-            "data_collection": "deny",
+        extra_body={
+            "provider": {
+                "require_parameters": True,
+                "data_collection": "deny",
+            },
         },
     )
     return model.with_structured_output(

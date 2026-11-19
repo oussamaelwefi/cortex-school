@@ -118,7 +118,7 @@ def test_unsafe_output_gate_is_conservative_across_languages():
 
 
 def test_openrouter_chain_requires_strict_json_schema_and_provider_controls(monkeypatch):
-    class _FakeChatOpenRouter:
+    class _FakeChatOpenAI:
         def __init__(self, **kwargs):
             self.kwargs = kwargs
 
@@ -127,17 +127,20 @@ def test_openrouter_chain_requires_strict_json_schema_and_provider_controls(monk
             self.output_kwargs = kwargs
             return self
 
-    monkeypatch.setattr(openrouter, "ChatOpenRouter", _FakeChatOpenRouter)
+    monkeypatch.setattr(openrouter, "ChatOpenAI", _FakeChatOpenAI)
     monkeypatch.setattr(settings.llm, "OPENROUTER_API_KEY", "test-key")
     monkeypatch.setattr(settings.llm, "OPENROUTER_MODEL", "test-model")
 
     chain = openrouter.get_teacher_update_draft_chain()
 
-    assert chain.kwargs["timeout"] == 20000
+    assert chain.kwargs["base_url"] == "https://openrouter.ai/api/v1"
+    assert chain.kwargs["timeout"] == 20
     assert chain.kwargs["max_retries"] == 1
-    assert chain.kwargs["openrouter_provider"] == {
-        "require_parameters": True,
-        "data_collection": "deny",
+    assert chain.kwargs["extra_body"] == {
+        "provider": {
+            "require_parameters": True,
+            "data_collection": "deny",
+        },
     }
     assert chain.schema is TeacherUpdateDraftResult
     assert chain.output_kwargs == {
