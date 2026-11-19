@@ -1250,5 +1250,9 @@
   "An accepted invitation activates school access. Child registrations and class assignments are managed separately.": "L’acceptation active l’accès à l’école. Les inscriptions des enfants et les affectations aux classes se gèrent séparément.",
   "Download CSV template": "Télécharger le modèle CSV",
   "1 invitation": "1 invitation",
-  "An invitation is being sent in the background.": "Une invitation est en cours d’envoi en arrière-plan."
+  "An invitation is being sent in the background.": "Une invitation est en cours d’envoi en arrière-plan.",
+  "The invitation is being sent in the background. Its status updates automatically.": "L’invitation est en cours d’envoi en arrière-plan. Son statut se met à jour automatiquement.",
+  "The invitation is queued. Its status will update automatically here.": "L’invitation a été mise en file d’envoi. Son statut se mettra à jour automatiquement sur cette page.",
+  "Status updates automatically": "Mise à jour automatique du statut",
+  "Invitation status could not be synchronized. Please try again.": "Impossible de synchroniser l’état des invitations. Veuillez réessayer."
 }

@@ -100,8 +100,11 @@ form, school-wide status counts, local name/email search, role/status filters,
 sorting and pagination. Acceptance, delivery progress, failures and expired links
 are shown as distinct states. Details load on demand; resending checks the latest
 record and requires confirmation. Accepted and queued/processing invitations
-cannot be resent. **Refresh** updates delivery and acceptance states while keeping
-the current filters and the last available results if the service is unavailable.
+cannot be resent. Statuses refresh every 15 seconds while the page is visible and
+when returning to the tab. **Refresh** also updates delivery and acceptance states,
+keeping current filters and the last available results if the service is unavailable.
+List and detail reads reconcile tracked invitations with WorkOS, so missed webhook
+events can be recovered; a provider failure is reported instead of claiming a sync.
 
 Administrators can use **Invitations → Import CSV** and choose one of four import
 types: administrators, teachers, guardians, or mixed roles. The first three apply

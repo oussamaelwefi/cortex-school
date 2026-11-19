@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import io
 import uuid
@@ -6,10 +7,11 @@ from datetime import timedelta
 from email.utils import parseaddr
 from typing import Any
 
+import httpx
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from workos import AsyncWorkOSClient
+from workos import AsyncWorkOSClient, WorkOSError
 from workos.user_management.models import UserInvite
 
 from core.config import settings
@@ -192,7 +194,7 @@ async def create_invitations_from_csv(
 
 
 def should_enqueue_invitation(invitation: Invitation) -> bool:
-    return invitation.send_status not in NON_REQUEUEABLE_SEND_STATUSES
+    return invitation.workos_state != "accepted" and invitation.send_status not in NON_REQUEUEABLE_SEND_STATUSES
 
 
 async def enqueue_invitation(
@@ -237,6 +239,102 @@ async def list_invitations(
         .order_by(Invitation.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+class InvitationSyncUnavailable(RuntimeError):
+    pass
+
+
+async def synchronize_invitation_statuses(
+    session: AsyncSession,
+    *,
+    organization_id: str,
+    invitations: list[Invitation],
+    bulk: bool = True,
+) -> None:
+    """Recover missed webhooks using exact provider IDs in the current school.
+
+    Provider reads happen before row locks. Re-read under lock before applying
+    snapshots so a concurrent acceptance or a new send cannot be overwritten.
+    Only invitation state/expiry are synchronized; membership is never changed.
+    """
+    candidates = [item for item in invitations if (
+        item.organization_id == organization_id
+        and item.workos_invitation_id
+        and item.workos_state != "accepted"
+        and item.send_status not in {InvitationSendStatus.QUEUED, InvitationSendStatus.PROCESSING}
+    )]
+    if not candidates:
+        return
+    if not settings.WORKOS_API_KEY:
+        raise InvitationSyncUnavailable("Invitation status could not be synchronized. Please try again.")
+
+    provider_ids = {item.workos_invitation_id for item in candidates}
+    snapshots: dict[str, UserInvite] = {}
+    try:
+        async with asyncio.timeout(8):
+            async with AsyncWorkOSClient(
+                api_key=settings.WORKOS_API_KEY,
+                base_url=settings.WORKOS_API_BASE_URL,
+                request_timeout=3,
+                max_retries=0,
+            ) as client:
+                if not bulk:
+                    for provider_id in provider_ids:
+                        snapshot = await client.user_management.get_invitation(provider_id)
+                        if snapshot.id == provider_id and snapshot.organization_id == organization_id:
+                            snapshots[snapshot.id] = snapshot
+                else:
+                    after = None
+                    cursors = set()
+                    while True:
+                        page = await client.user_management.list_invitations(
+                            organization_id=organization_id, limit=100, after=after,
+                        )
+                        for snapshot in page.data:
+                            if snapshot.id in provider_ids and snapshot.organization_id == organization_id:
+                                snapshots[snapshot.id] = snapshot
+                        after = page.list_metadata.after
+                        if not after or provider_ids.issubset(snapshots):
+                            break
+                        if after in cursors:
+                            raise InvitationSyncUnavailable("Invitation status could not be synchronized. Please try again.")
+                        cursors.add(after)
+    except (WorkOSError, httpx.HTTPError, TimeoutError) as exc:
+        # Provider responses may contain invitation tokens. Never expose them.
+        raise InvitationSyncUnavailable("Invitation status could not be synchronized. Please try again.") from exc
+
+    if not snapshots:
+        return
+    current = (await session.scalars(
+        select(Invitation).where(
+            Invitation.organization_id == organization_id,
+            Invitation.id.in_([item.id for item in candidates]),
+        ).with_for_update().execution_options(populate_existing=True)
+    )).all()
+    changed = False
+    for invitation in current:
+        snapshot = snapshots.get(invitation.workos_invitation_id)
+        if snapshot is None or invitation.workos_state == "accepted":
+            continue
+        if snapshot.email.strip().lower() != invitation.email.strip().lower():
+            continue
+        state = getattr(snapshot.state, "value", snapshot.state)
+        if state not in {"pending", "accepted", "revoked", "expired"}:
+            continue
+        if state == "pending" and invitation.workos_state == "revoked":
+            continue
+        if invitation.workos_state != state:
+            invitation.workos_state = state
+            changed = True
+        expires_at = snapshot.expires_at
+        if expires_at is not None and (
+            state != "pending" or invitation.expires_at is None or expires_at >= invitation.expires_at
+        ) and invitation.expires_at != expires_at:
+            invitation.expires_at = expires_at
+            changed = True
+    if changed:
+        await session.commit()
 
 
 async def process_invitation(invitation_id: uuid.UUID) -> dict[str, Any]:

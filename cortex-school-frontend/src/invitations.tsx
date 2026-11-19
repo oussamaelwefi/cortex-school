@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -83,6 +83,7 @@ const groups: { value: Group; title: string }[] = [
   { value: "attention", title: "Invitations to follow up" },
 ];
 const pageSize = 12;
+export const invitationRefreshMs = 15000;
 const normalize = (value: string) =>
   value
     .normalize("NFD")
@@ -120,7 +121,7 @@ export function invitationState(invitation: Invitation, now = Date.now()) {
           : "Queued to send",
       tone: "progress",
       description:
-        "The invitation is being sent in the background. Refresh to follow its progress.",
+        "The invitation is being sent in the background. Its status updates automatically.",
     } as const;
   if (invitation.send_status === "failed")
     return {
@@ -355,11 +356,13 @@ function InvitePerson({
 function InvitationDetails({
   invitation,
   confirmInitially,
+  refreshRevision,
   onClose,
   onDone,
 }: {
   invitation: Invitation;
   confirmInitially: boolean;
+  refreshRevision: number;
   onClose: () => void;
   onDone: (invitation: Invitation) => void;
 }) {
@@ -368,7 +371,7 @@ function InvitationDetails({
   const remote = useRemote(
     detailEndpoint,
     { invitation_id: invitation.id },
-    revision,
+    revision + refreshRevision,
   );
   const record: Invitation | null = remote.data;
   const [confirm, setConfirm] = useState(confirmInitially);
@@ -534,8 +537,10 @@ export function InvitationsPage() {
     confirm: boolean;
   } | null>(null);
   const reload = useCallback(() => setRevision((value) => value + 1), []);
+  const fetching = useRef(true);
   useEffect(() => {
     let active = true;
+    fetching.current = true;
     setRemote((previous) => ({ ...previous, loading: true, error: "" }));
     api(listEndpoint)
       .then((data: Invitation[]) => {
@@ -548,11 +553,29 @@ export function InvitationsPage() {
             loading: false,
             error: error.message,
           }));
+      })
+      .finally(() => {
+        if (active) fetching.current = false;
       });
     return () => {
       active = false;
     };
   }, [api, revision]);
+  useEffect(() => {
+    const refreshVisiblePage = () => {
+      if (document.visibilityState !== "visible" || fetching.current) return;
+      fetching.current = true;
+      reload();
+    };
+    const timer = window.setInterval(refreshVisiblePage, invitationRefreshMs);
+    window.addEventListener("focus", refreshVisiblePage);
+    document.addEventListener("visibilitychange", refreshVisiblePage);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshVisiblePage);
+      document.removeEventListener("visibilitychange", refreshVisiblePage);
+    };
+  }, [reload]);
   const records = remote.data ?? [];
   const counts = {
     all: remote.data === null ? null : records.length,
@@ -637,7 +660,7 @@ export function InvitationsPage() {
         ? "This person has already joined your school."
         : record.send_status === "sent"
           ? "An invitation has already been sent to this email address."
-          : "The invitation is queued. Refresh this page to follow its delivery.",
+          : "The invitation is queued. Its status will update automatically here.",
     );
     if (created) clearFilters();
     reload();
@@ -961,7 +984,7 @@ export function InvitationsPage() {
                                 ? `${t("Valid until")} ${dateLabel(record.expires_at)}`
                                 : status.group === "attention"
                                   ? t("You can resend this invitation")
-                                  : t("Refresh to follow delivery")}
+                                  : t("Status updates automatically")}
                           </small>
                         </td>
                         <td
@@ -1083,6 +1106,7 @@ export function InvitationsPage() {
         <InvitationDetails
           invitation={selected.invitation}
           confirmInitially={selected.confirm}
+          refreshRevision={revision}
           onClose={() => setSelected(null)}
           onDone={(record) => changed(record)}
         />

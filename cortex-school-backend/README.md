@@ -37,7 +37,20 @@ For Railway, apply `alembic upgrade head` on the backend database and deploy the
 
 In the WorkOS Dashboard, open **Webhooks** in the same environment that sends your invitations. Add or update the endpoint to `https://YOUR-BACKEND-DOMAIN/api/webhooks/workos/` and subscribe to `invitation.accepted`. You can also subscribe to `invitation.revoked` and `invitation.resent` to keep revocations and resent invitation expiry dates in sync.
 
-Copy the endpoint's signing secret into the Railway **backend** service variable `WORKOS_WEBHOOK_SECRET` and deploy the backend. After a recipient accepts a Cortex invitation, refresh the **Invitations** page to see **Accepted** under **Invitation status**. **Send status** tracks email delivery separately. To confirm delivery, check the event's response in the WorkOS webhook log. Previously accepted invitations require replay of their acceptance events or a separate backfill.
+Copy the endpoint's signing secret into the Railway **backend** service variable `WORKOS_WEBHOOK_SECRET` and deploy the backend. Webhooks update acceptance and revocation as events arrive. **Send status** tracks email delivery separately. To confirm webhook delivery, check the event's response in the WorkOS webhook log.
+
+The API also reconciles tracked invitation states with WorkOS when loading the
+invitation list or details and before resending. This recovers previously missed
+acceptance events without replaying them. Configure `WORKOS_API_KEY` on the API
+service using the same WorkOS environment as the sending worker. List reads use
+organization-scoped, paginated provider requests rather than one call per row.
+Reconciliation checks exact invitation IDs, organization and email; an active
+membership alone does not count as acceptance of a particular invitation. A
+concurrent acceptance is never replaced by an older pending snapshot.
+
+The administrator page refreshes every 15 seconds while visible and when returning
+to the tab. Manual refresh remains available. If WorkOS cannot be checked, the API
+returns a retryable error and the frontend retains its last available results.
 
 ## Local Docker runtime for this checkout
 

@@ -8,6 +8,7 @@ import {
   InvitationsPage,
   invitationState,
   canRetryInvitation,
+  invitationRefreshMs,
 } from "../src/invitations.tsx";
 import { invitationCsvTemplate } from "../src/invitation-import.tsx";
 
@@ -88,6 +89,7 @@ test("downloadable invitation templates match the selected import mode", () => {
 test("administrator invitation workspace", async (suite) => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/invitations",
+    pretendToBeVisual: true,
   });
   const before = {
     window: globalThis.window,
@@ -176,7 +178,7 @@ test("administrator invitation workspace", async (suite) => {
       [...base.querySelectorAll("button")].find(
         (item) => item.textContent.trim() === text,
       );
-    return { container, api, data, click, change, button };
+    return { container, root, api, data, click, change, button };
   }
   await suite.test(
     "one list request renders readable states and only valid resend actions",
@@ -411,6 +413,138 @@ test("administrator invitation workspace", async (suite) => {
       assert.equal(dialog.querySelectorAll("input[type=radio]").length, 4);
       await click(dialog.querySelector("input[value=mixed]"));
       assert.ok(button("Download CSV template", dialog));
+    },
+  );
+  await suite.test(
+    "automatic refresh shows a newly accepted invitation without losing filters or focus",
+    async (t) => {
+      let tick;
+      t.mock.method(window, "setInterval", (callback, delay) => {
+        assert.equal(delay, invitationRefreshMs);
+        tick = callback;
+        return 12345;
+      });
+      const { container, data, api, change } = await mount(t, {
+        path: "/invitations?role=teacher",
+      });
+      const search = container.querySelector("input[type=search]");
+      await change(search, "Amira");
+      await act(async () => search.focus());
+      data[0] = { ...data[0], workos_state: "accepted" };
+      await act(async () => tick());
+      assert.equal(api.mock.callCount(), 2);
+      assert.equal(container.querySelectorAll("tbody tr").length, 1);
+      assert.match(
+        container.querySelector("tbody").textContent,
+        /Joined the school/,
+      );
+      assert.equal(
+        container.querySelector(
+          "button[aria-label='Resend invitation to Amira@example.test']",
+        ),
+        null,
+      );
+      assert.equal(
+        container.querySelector("select[aria-label='Filter invitation roles']")
+          .value,
+        "teacher",
+      );
+      assert.equal(search.value, "Amira");
+      assert.equal(document.activeElement === search, true);
+    },
+  );
+  await suite.test(
+    "hidden pages pause refresh and returning to the tab updates immediately",
+    async (t) => {
+      let tick;
+      let visibility = "visible";
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => visibility,
+      });
+      t.after(() => {
+        delete document.visibilityState;
+      });
+      t.mock.method(window, "setInterval", (callback) => {
+        tick = callback;
+        return 12345;
+      });
+      const { api, data } = await mount(t);
+      visibility = "hidden";
+      await act(async () => {
+        tick();
+        window.dispatchEvent(new window.Event("focus"));
+      });
+      assert.equal(api.mock.callCount(), 1);
+      data[0] = { ...data[0], workos_state: "accepted" };
+      visibility = "visible";
+      await act(async () =>
+        document.dispatchEvent(new window.Event("visibilitychange")),
+      );
+      assert.equal(api.mock.callCount(), 2);
+      await act(async () => window.dispatchEvent(new window.Event("focus")));
+      assert.equal(api.mock.callCount(), 3);
+    },
+  );
+  await suite.test(
+    "background refresh never overlaps a request and cleans up on navigation",
+    async (t) => {
+      let tick, finish;
+      let lists = 0;
+      t.mock.method(window, "setInterval", (callback) => {
+        tick = callback;
+        return 12345;
+      });
+      const cleared = t.mock.method(window, "clearInterval");
+      const { root, api, data } = await mount(t, {
+        read: (endpoint) => {
+          if (endpoint.path === "/invitations/" && ++lists === 2)
+            return new Promise((resolve) => {
+              finish = resolve;
+            });
+        },
+      });
+      await act(async () => tick());
+      await act(async () => {
+        tick();
+        window.dispatchEvent(new window.Event("focus"));
+      });
+      assert.equal(api.mock.callCount(), 2);
+      await act(async () => finish([...data]));
+      await act(async () => root.render(null));
+      await act(async () => window.dispatchEvent(new window.Event("focus")));
+      assert.equal(api.mock.callCount(), 2);
+      assert.equal(
+        cleared.mock.calls.some((call) => call.arguments[0] === 12345),
+        true,
+      );
+    },
+  );
+  await suite.test(
+    "a failed automatic sync keeps cached rows and reports the failure",
+    async (t) => {
+      let tick;
+      let unavailable = false;
+      t.mock.method(window, "setInterval", (callback) => {
+        tick = callback;
+        return 12345;
+      });
+      const { container } = await mount(t, {
+        read: () => {
+          if (unavailable)
+            throw Error(
+              "Invitation status could not be synchronized. Please try again.",
+            );
+        },
+      });
+      unavailable = true;
+      await act(async () => tick());
+      assert.equal(container.querySelectorAll("tbody tr").length, 5);
+      assert.match(
+        container.querySelector("[role=alert]").textContent,
+        /could not be synchronized/,
+      );
+      assert.match(container.textContent, /Showing the last available results/);
     },
   );
 });

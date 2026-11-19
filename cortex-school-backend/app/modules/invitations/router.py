@@ -20,12 +20,14 @@ from modules.invitations.schemas import (
 )
 from modules.invitations.services import (
     InvitationCsvError,
+    InvitationSyncUnavailable,
     _ensure_same_organization,
     create_invitations_from_csv,
     get_invitation,
     list_invitations,
     mark_invitation_enqueue_failed,
     should_enqueue_invitation,
+    synchronize_invitation_statuses,
 )
 from modules.invitations.tasks import enqueue_invitation_task
 
@@ -66,6 +68,7 @@ async def create_invitation(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="An invitation already exists for this email with a different role",
             )
+        await _synchronize_status(session, organization_id, [invitation], bulk=False)
         if not should_enqueue_invitation(invitation):
             return invitation
         invitation.first_name = payload.first_name
@@ -188,7 +191,9 @@ async def get_invitations(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Authenticated user must belong to an organization",
         )
-    return await list_invitations(session, organization_id=organization_id)
+    invitations = await list_invitations(session, organization_id=organization_id)
+    await _synchronize_status(session, organization_id, invitations)
+    return invitations
 
 
 @router.get("/{invitation_id}/", response_model=InvitationResponse)
@@ -202,6 +207,7 @@ async def get_invitation_status(
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     _ensure_same_organization(invitation.organization_id, current_user)
+    await _synchronize_status(session, invitation.organization_id, [invitation], bulk=False)
     return invitation
 
 
@@ -215,10 +221,14 @@ async def retry_invitation(
     session: AsyncSession = Depends(db_session),
     current_user: dict = Depends(get_current_user),
 ):
-    invitation = await session.get(Invitation, invitation_id, with_for_update=True)
+    invitation = await session.get(Invitation, invitation_id)
     if invitation is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
     _ensure_same_organization(invitation.organization_id, current_user)
+    await _synchronize_status(session, invitation.organization_id, [invitation], bulk=False)
+    invitation = await session.get(Invitation, invitation_id, with_for_update=True, populate_existing=True)
+    if invitation is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitation not found")
 
     if invitation.workos_state == "accepted":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This invitation has already been accepted.")
@@ -245,3 +255,12 @@ async def retry_invitation(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not enqueue invitation",
         ) from exc
+
+
+async def _synchronize_status(session, organization_id, invitations, *, bulk=True):
+    try:
+        await synchronize_invitation_statuses(
+            session, organization_id=organization_id, invitations=invitations, bulk=bulk,
+        )
+    except InvitationSyncUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
