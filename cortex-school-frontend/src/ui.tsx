@@ -17,6 +17,7 @@ import type { Data, Endpoint } from "./types";
 import { InvitationCsvImport } from "./invitation-import";
 import { AISettingsValues, InstructionalDays } from "./school-settings-values";
 import { StudentGuardianContext, StudentGuardians } from "./student-guardians";
+import { TeacherDraftReview } from "./teacher-draft-review";
 export const ToastContext = createContext<(s: string) => void>(() => {});
 export const ChoicesContext = createContext<Choices>({});
 export function Loading() {
@@ -250,6 +251,7 @@ export function Operation({
       : undefined,
   );
   const [file, setFile] = useState<File>();
+  const [draftRequest, setDraftRequest] = useState<Data | null>(null);
   const [readRevision, setReadRevision] = useState(0);
   const directAi = useRemote(e, {}, readRevision, e.id === "get_school_ai_settings");
   const [busy, setBusy] = useState(false),
@@ -307,12 +309,14 @@ export function Operation({
     setBusy(true);
     setError("");
     try {
+      const payload = e.body ? cleanPayload(body, e.body) : undefined;
       const response = await api(
         e,
         params,
-        e.body ? cleanPayload(body, e.body) : undefined,
+        payload,
         file,
       );
+      if (e.id === "create_teacher_update_draft") setDraftRequest(payload);
       if (
         e.method === "GET" ||
         e.upload ||
@@ -336,6 +340,8 @@ export function Operation({
     return <InvitationCsvImport onClose={onClose} onDone={onDone} />;
   if (e.id === "get_school_ai_settings")
     return <Modal title="AI settings" onClose={onClose} wide><div className="modal-body">{directAi.loading ? <Loading/> : directAi.error ? <ErrorBox error={directAi.error} retry={() => setReadRevision((value) => value + 1)}/> : directAi.data && <AISettingsValues settings={directAi.data}/>}</div><footer><button className="button primary" onClick={onClose}>{t("Close")}</button></footer></Modal>;
+  if (e.id === "create_teacher_update_draft" && result !== undefined && draftRequest)
+    return <TeacherDraftReview draft={result} request={draftRequest} onBack={() => setResult(undefined)} onClose={onClose} onDone={onDone}/>;
   return (
     <Modal
       title={e.title}

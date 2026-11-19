@@ -160,6 +160,20 @@ Guardians can read their school’s uploaded PDFs online from **School policies*
 
 Administrators can preview, download, or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
 
+## Teacher AI drafts
+
+Generated teacher drafts open in an editable review screen. The current AuthKit
+profile supplies the full teacher name for the signature; common French, English,
+and Arabic placeholders are replaced, and an existing signature is not duplicated.
+If the profile has no name, the teacher must enter a signature before continuing.
+
+**Review recipients** previews the original classroom and student selection with
+the existing authorized audience endpoint. A second screen shows the final text,
+student list and number of linked family accounts. Only **Confirm publication**
+creates the school update. Returning to edit or closing the dialog does not publish;
+failed publication preserves the reviewed text for an explicit retry. Clarification
+questions return to the original observations, without offering publication.
+
 ## Workspace identity
 
 Each signed-in space has a persistent role label, school name and distinct accent:

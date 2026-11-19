@@ -8,7 +8,7 @@ PROMPTS = {
     "workflow_teacher_update_draft": {
         "template": "teacher/update_draft",
         "description": "Bounded teacher update draft from teacher observations",
-        "version": "teacher_update_draft_v1",
+        "version": "teacher_update_draft_v2",
     },
     "workflow_guardian_weekly_explanation": {
         "template": "guardian/weekly_explanation",

@@ -45,6 +45,7 @@ import {
   X,
 } from "lucide-react";
 import { ApiContext, findEndpoint, makeApi, sessionRejectedMessage } from "./api";
+import { CurrentUserContext } from "./current-user";
 import { rolesFromClaims } from "./lib.mjs";
 import {
   ChoicesContext,
@@ -91,6 +92,7 @@ import "./school-members.css";
 import "./academic-directory.css";
 import "./academic-years.css";
 import "./teacher-classrooms.css";
+import "./teacher-draft-review.css";
 import "./student-guardians.css";
 import "./school-settings.css";
 import "./workspace-identity.css";
@@ -305,6 +307,7 @@ function Authenticated() {
     );
   return (
     <ApiContext.Provider value={api}>
+      <CurrentUserContext.Provider value={{ displayName: [auth.user?.firstName, auth.user?.lastName].map((part) => part?.trim()).filter(Boolean).join(" ") }}>
       <Shell
         roles={roles}
         name={auth.user?.firstName || ""}
@@ -312,6 +315,7 @@ function Authenticated() {
         organization={claims.org_id}
         onExit={() => auth.signOut()}
       />
+      </CurrentUserContext.Provider>
     </ApiContext.Provider>
   );
 }

@@ -104,7 +104,8 @@ test("teacher draft generation keeps observations after a timeout and supports r
       questions: [],
     }),
   );
-  assert.match(dialog.textContent, /Un bel atelier/);
-  assert.match(dialog.textContent, /activité de lecture/);
-  assert.equal(dialog.querySelector("[role=alert]"), null);
+  const review = document.querySelector("[role=dialog]");
+  assert.equal(review.querySelector('input[maxlength="255"]').value, "Un bel atelier");
+  assert.match(review.querySelector("textarea").value, /activité de lecture/);
+  assert.equal(review.querySelector("[role=alert]"), null);
 });
