@@ -167,6 +167,27 @@ schools, add `--organization-id org_...`; another class can be selected with
 `--classroom-name "6e B"`. `--author-id user_...` selects a verified active school
 administrator; otherwise the first active administrator by ID is used.
 
+For the overdue acknowledgement/RAG demonstration, import a student update with
+the additional mode below. Its default deadline is 18 November 2026 at 18:00 Tunis:
+
+```bash
+python -m scripts.import_historical_publication --organization-id org_... --classroom-name "1A · Jasmin" --require-acknowledgement --due-at "2026-11-18T18:00:00+01:00" --apply
+```
+
+This mode writes to the existing student-update workflow, with mandatory
+acknowledgement, per-student recipients, family states, assignment events and
+in-app notifications. An active teacher assigned to the class is selected as the
+responsible teacher; `--teacher-id user_...` can select another eligible teacher.
+The assignment event records the importing administrator as its actor. The update
+appears in **Student updates** and the overdue acknowledgement queue; it is ready
+for manual reminder preparation and approval. It does not create a general
+`schoolpublication`, call the LLM or send a reminder automatically. If a general
+publication was previously imported, that row is not converted or removed.
+
+The imported deadline must follow the publication date and already be past. The
+normal application continues to reject past deadlines when creating new updates.
+Repeating this import preserves any subsequent family reads and acknowledgements.
+
 ## Folders
 
 | Path | What |

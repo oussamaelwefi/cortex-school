@@ -28,9 +28,11 @@ d’un règlement, utilisez ses dispositions et ses références.
 >
 > L’administration
 
-Le script `app/scripts/import_historical_publication.py` reprend ce contenu. Il
-importe une publication générale et ses destinataires ; il ne crée pas de suivi
-élève, d’accusé de réception obligatoire ou de relance IA.
+Le script `app/scripts/import_historical_publication.py` reprend ce contenu. Par
+défaut, il importe une publication générale et ses destinataires. Avec l’option
+`--require-acknowledgement`, il importe la version en **suivi élève**, avec demande
+explicite d’accusé de réception, une échéance passée et les états familiaux
+nécessaires aux relances. Il ne génère ni n’envoie de relance automatiquement.
 
 ## Document d’exemple à ajouter aux consignes de l’établissement
 
@@ -85,9 +87,17 @@ un numéro de passage qui ne figure pas dans les sources retournées.
 ## Parcours fonctionnel actuel pour la vidéo
 
 1. Ajouter le règlement dans la bibliothèque des consignes.
-2. Créer un **suivi élève** sur ce sujet depuis l’espace enseignant, avec accusé de
-   réception obligatoire et une échéance. Pour un test via le formulaire,
-   sélectionner une échéance proche encore future, puis la laisser passer.
+2. Importer un **suivi élève** avec accusé de réception obligatoire et échéance
+   passée, depuis le backend Railway après déploiement du script :
+
+   ```bash
+   python -m scripts.import_historical_publication --organization-id org_... --classroom-name "1A · Jasmin" --require-acknowledgement --due-at "2026-11-18T18:00:00+01:00" --apply
+   ```
+
+   Utiliser l’identifiant réel de l’établissement et le nom exact de sa classe.
+   Sans `--apply`, la commande fournit uniquement un aperçu. Un enseignant actif
+   doit être affecté à la classe. Pour un test créé dans le formulaire enseignant,
+   choisir une échéance proche encore future, puis la laisser passer.
 3. Ne pas accuser réception avec l’un des comptes familiaux destinataires.
 4. Depuis l’administration, ouvrir l’élément en retard et préparer une **relance
    IA**. L’agent lit le suivi et recherche les passages pertinents du règlement.
@@ -102,5 +112,7 @@ Les dates historiques de la publication proposée permettent d’illustrer une
 une échéance déjà passée : il ne faut pas les recopier comme échéance d’un nouveau
 suivi créé après cette date.
 
-Le nouvel onglet **Publications** reste un circuit distinct : son import ne
-déclenche pas cette recherche documentaire ni une relance automatique.
+Le nouvel onglet **Publications** reste un circuit distinct. Le mode avec accusé
+écrit dans **Suivis élèves**, puis **À traiter**, afin de réutiliser le parcours de
+relance documentaire existant. Une publication générale déjà importée n’est ni
+convertie ni supprimée par ce mode.

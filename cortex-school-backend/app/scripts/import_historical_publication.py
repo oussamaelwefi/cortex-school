@@ -13,6 +13,7 @@ import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from sqlalchemy import select, text
@@ -24,6 +25,10 @@ from modules.publications import services as publication_services
 from modules.publications.models import PublicationRecipient, SchoolPublication
 from modules.publications.schemas import PublicationTarget
 from modules.schools.models import School
+from scripts.historical_acknowledgement import (
+    prepare_acknowledgement,
+    write_acknowledgement,
+)
 
 
 TITLE = "Sortie pédagogique du 25 novembre — autorisation parentale"
@@ -39,6 +44,7 @@ La lecture de cette publication dans Cortex School ne remplace pas l’autorisat
 
 L’administration"""
 PUBLISHED_AT = "2026-11-18T09:00:00+01:00"
+DUE_AT = "2026-11-18T18:00:00+01:00"
 
 
 async def import_publication(
@@ -49,10 +55,23 @@ async def import_publication(
     author_id=None,
     published_at=None,
     apply=False,
+    require_acknowledgement=False,
+    due_at=None,
+    teacher_id=None,
 ):
     published_at = published_at or datetime.fromisoformat(PUBLISHED_AT)
     if published_at.tzinfo is None or published_at >= utcnow():
         raise ValueError("La date doit être passée et préciser le fuseau horaire.")
+    if require_acknowledgement:
+        due_at = due_at or datetime.fromisoformat(DUE_AT)
+        if due_at.tzinfo is None or not published_at < due_at < utcnow():
+            raise ValueError(
+                "L’échéance de l’accusé doit préciser le fuseau horaire, suivre la publication et être déjà passée."
+            )
+    elif due_at is not None or teacher_id is not None:
+        raise ValueError(
+            "Utilisez --require-acknowledgement avec --due-at ou --teacher-id."
+        )
     if organization_id is None:
         organizations = (await session.scalars(select(School.organization_id))).all()
         if len(organizations) != 1:
@@ -94,15 +113,41 @@ async def import_publication(
     recipients, missing, _ = await publication_services._resolve_audience(
         session, target, organization_id
     )
+    body = BODY
+    snapshot = None
+    if require_acknowledgement:
+        snapshot = await prepare_acknowledgement(
+            session,
+            organization_id,
+            classrooms[0],
+            _current_school_date(school),
+            members,
+            recipients,
+            teacher_id,
+        )
+        deadline = due_at.astimezone(ZoneInfo(school.timezone)).strftime(
+            "%d/%m/%Y à %H:%M"
+        )
+        body = BODY.replace(
+            "La lecture de cette publication dans Cortex School ne remplace pas l’autorisation parentale signée.",
+            f"Merci d’accuser réception de ce message dans Cortex School avant le {deadline}. Cet accusé confirme uniquement la prise de connaissance du message et ne remplace pas l’autorisation parentale signée.",
+        )
     # Audience membership is current: the original historical recipient list
     # cannot be inferred from a publication date alone.
     identity = {
         "organization": organization_id,
         "classroom": classroom_id,
         "title": TITLE,
-        "body": BODY,
+        "body": body,
         "published_at": published_at.astimezone(timezone.utc).isoformat(),
     }
+    if require_acknowledgement:
+        identity.update(
+            {
+                "kind": "student_update_acknowledgement",
+                "due_at": due_at.astimezone(timezone.utc).isoformat(),
+            }
+        )
     payload_hash = hashlib.sha256(
         json.dumps(identity, sort_keys=True).encode()
     ).hexdigest()
@@ -114,7 +159,7 @@ async def import_publication(
         "organization_id": organization_id,
         "classroom": classroom_name,
         "title": TITLE,
-        "body": BODY,
+        "body": body,
         "published_at": published_at.isoformat(),
         "author_user_id": author_id,
         "recipient_count": len(recipients),
@@ -124,6 +169,20 @@ async def import_publication(
         "publication_id": str(publication_id),
         "status": "preview",
     }
+    if require_acknowledgement:
+        summary.pop("publication_id")
+        summary.update(
+            {
+                "module": "student_updates",
+                "student_update_id": str(publication_id),
+                "requires_acknowledgement": True,
+                "due_at": due_at.isoformat(),
+                "overdue": True,
+                "student_count": len(snapshot["students"]),
+                "recipient_count": len(snapshot["students"]),
+                "teacher_user_id": snapshot["teacher_id"],
+            }
+        )
     # Release the read transaction before opening the atomic import transaction.
     await session.rollback()
     if not apply:
@@ -137,6 +196,20 @@ async def import_publication(
                 "key": int.from_bytes(publication_id.bytes[:8], "big", signed=True),
             },
         )
+        if require_acknowledgement:
+            result = await write_acknowledgement(
+                session,
+                update_id=publication_id,
+                organization_id=organization_id,
+                classroom_id=classroom_id,
+                author_id=author_id,
+                title=TITLE,
+                body=body,
+                published_at=published_at,
+                due_at=due_at,
+                snapshot=snapshot,
+            )
+            return {**summary, **result}
         existing = await session.get(SchoolPublication, publication_id)
         if existing is not None:
             if (
@@ -202,6 +275,19 @@ async def main():
     )
     parser.add_argument("--published-at", default=PUBLISHED_AT)
     parser.add_argument(
+        "--require-acknowledgement",
+        action="store_true",
+        help="Importer un suivi élève avec accusé de réception en retard.",
+    )
+    parser.add_argument(
+        "--due-at",
+        help=f"Échéance passée avec fuseau horaire ; défaut en mode accusé : {DUE_AT}.",
+    )
+    parser.add_argument(
+        "--teacher-id",
+        help="Enseignant actif affecté à la classe ; sinon le titulaire est choisi.",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="Enregistrer la publication ; sans cette option, aperçu uniquement.",
@@ -215,6 +301,9 @@ async def main():
             author_id=args.author_id,
             published_at=datetime.fromisoformat(args.published_at),
             apply=args.apply,
+            require_acknowledgement=args.require_acknowledgement,
+            due_at=datetime.fromisoformat(args.due_at) if args.due_at else None,
+            teacher_id=args.teacher_id,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
