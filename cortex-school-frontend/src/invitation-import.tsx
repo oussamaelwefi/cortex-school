@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   CheckCircle2,
+  Download,
   FileUp,
   GraduationCap,
   Layers,
@@ -42,6 +43,10 @@ const modes = [
   },
 ] as const;
 type Mode = (typeof modes)[number]["value"];
+export const invitationCsvTemplate = (mode: Mode) =>
+  "\uFEFFemail,first_name,last_name" +
+  (mode === "mixed" ? ",role_slug" : "") +
+  "\r\n";
 type ImportResult = {
   created_count: number;
   updated_count: number;
@@ -70,6 +75,20 @@ export function InvitationCsvImport({
   const [error, setError] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
   const selected = modes.find((entry) => entry.value === mode);
+
+  function downloadTemplate() {
+    if (!mode) return;
+    const url = URL.createObjectURL(
+      new Blob([invitationCsvTemplate(mode)], {
+        type: "text/csv;charset=utf-8",
+      }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `cortex-invitations-${mode}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -227,6 +246,15 @@ export function InvitationCsvImport({
                 className="ii-file-section"
                 aria-label={t("Select invitation CSV")}
               >
+                <button
+                  type="button"
+                  className="button small subtle ii-template"
+                  onClick={downloadTemplate}
+                  disabled={busy}
+                >
+                  <Download size={15} />
+                  {t("Download CSV template")}
+                </button>
                 <div className="ii-role-note">
                   <p>
                     {t(

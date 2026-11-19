@@ -95,12 +95,21 @@ requests remain in their own workspace.
 
 On generic resource pages, open a record to see related actions with its identifiers prefilled. Their **All workflows** panels expose remaining backend operations as typed forms. Dedicated workspaces such as **Academic years** present their actions directly. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
 
+The administrator’s **Invitations** page has role shortcuts, a focused single-person
+form, school-wide status counts, local name/email search, role/status filters,
+sorting and pagination. Acceptance, delivery progress, failures and expired links
+are shown as distinct states. Details load on demand; resending checks the latest
+record and requires confirmation. Accepted and queued/processing invitations
+cannot be resent. **Refresh** updates delivery and acceptance states while keeping
+the current filters and the last available results if the service is unavailable.
+
 Administrators can use **Invitations → Import CSV** and choose one of four import
 types: administrators, teachers, guardians, or mixed roles. The first three apply
 the selected role to everyone, overriding any `role_slug` values in the file.
 These files require `email`; `first_name` and `last_name` are optional. Mixed files
 also require `role_slug` on every row: `school_admin`, `teacher`, or `guardian`.
-Save files as UTF-8 **CSV**. The server validates the complete file before saving
+Each mode offers a downloadable header-only CSV template to fill in. Save files
+as UTF-8 **CSV**. The server validates the complete file before saving
 and queues invitations automatically for the Celery worker. The result shows
 queued, skipped, and failed counts. Existing queued or sent invitations are
 skipped when the role matches; conflicting roles reject the import.

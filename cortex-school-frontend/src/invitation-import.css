@@ -78,6 +78,9 @@
   padding: 3px 0 3px 12px;
   margin-bottom: 12px;
 }
+.ii-template {
+  margin-bottom: 15px;
+}
 .ii-role-note p {
   font-size: 11px;
   color: #64705e;
