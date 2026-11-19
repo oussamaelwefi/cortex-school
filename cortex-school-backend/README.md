@@ -138,6 +138,35 @@ backend service's `/app` directory: `python -m alembic upgrade head`. The revisi
 backend and frontend together. The API needs `WORKOS_API_KEY`; no new secret or
 Celery task is needed for these durable inbox deliveries.
 
+### Import one historical publication
+
+`scripts/import_historical_publication.py` inserts a school-trip authorization notice directly
+into the configured database, dated 18 November 2026 at 09:00 (Tunis). It targets
+the current family accounts and teachers of `6e A`, verifies WorkOS membership,
+and inserts the publication and receipts atomically. This is a new historical
+entry; the original historical recipient list and read state are not inferred.
+Existing messages are not modified and repeated execution does not create copies.
+
+The notice concerns a trip on 25 November 2026 with a signed-authorization deadline
+of 18 November at 18:00. Its referenced document is supplied as fictional PFE demo
+content in `docs/demo-publication-sortie-scolaire.md`; add that text to the school's
+policy library before using the notice. General publications do not invoke policy
+retrieval. To demonstrate automatic citations, use the documented student-update
+acknowledgement/reminder workflow described in that file.
+
+After deploying this script, run it from `/app` in the Railway backend:
+
+```bash
+python -m scripts.import_historical_publication
+python -m scripts.import_historical_publication --apply
+```
+
+The first command previews the content and recipient counts without writing.
+`--apply` writes to the database configured for that backend process. With multiple
+schools, add `--organization-id org_...`; another class can be selected with
+`--classroom-name "6e B"`. `--author-id user_...` selects a verified active school
+administrator; otherwise the first active administrator by ID is used.
+
 ## Folders
 
 | Path | What |
