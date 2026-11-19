@@ -160,6 +160,24 @@ Guardians can read their school’s uploaded PDFs online from **School policies*
 
 Administrators can preview, download, or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
 
+## School publications
+
+The **Publications** navigation item is available in administration, teacher, and
+family workspaces. Administrators can select classes, individual family accounts,
+teachers, or students' families, search and select multiple targets, then compose
+a title and message. A preview lists the resolved accounts and any students with
+no reachable family before a separate **Confirm publication** action. A changed
+audience requires a fresh review, and retries reuse the same publication attempt.
+
+Teachers and family members receive only their addressed publications in their
+inbox. Opening a publication marks their own receipt as read; administrators can
+view readership by account. Lists support search, pagination and unread filtering
+for recipients. They refresh every 30 seconds while visible and on focus, without
+clearing a message being composed. This is in-app delivery, not email or SMS.
+
+Deploy both applications and apply the backend's `a3b5c7d9e1f2` migration before
+opening the new feature (`python -m alembic upgrade head` in the backend service).
+
 ## Teacher AI drafts
 
 Generated teacher drafts open in an editable review screen. The current AuthKit

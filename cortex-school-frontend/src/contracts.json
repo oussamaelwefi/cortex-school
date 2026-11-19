@@ -1653,6 +1653,265 @@
     "upload": false
   },
   {
+    "id": "get_publication_audiences",
+    "title": "Get publication audiences",
+    "method": "GET",
+    "path": "/publications/audiences/",
+    "module": "publications",
+    "role": "admin",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "preview_publication",
+    "title": "Preview publication",
+    "method": "POST",
+    "path": "/publications/preview/",
+    "module": "publications",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "classrooms",
+                "guardians",
+                "teachers",
+                "students"
+              ],
+              "required": true
+            },
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "required": true,
+              "min_length": 1,
+              "max_length": 500
+            }
+          },
+          "name": "PublicationTarget",
+          "required": true
+        }
+      },
+      "name": "PublicationPreviewRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "publish_school_publication",
+    "title": "Publish school publication",
+    "method": "POST",
+    "path": "/publications/",
+    "module": "publications",
+    "role": "admin",
+    "params": [],
+    "body": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "classrooms",
+                "guardians",
+                "teachers",
+                "students"
+              ],
+              "required": true
+            },
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "required": true,
+              "min_length": 1,
+              "max_length": 500
+            }
+          },
+          "name": "PublicationTarget",
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 255,
+          "required": true
+        },
+        "body": {
+          "type": "string",
+          "min_length": 1,
+          "max_length": 5000,
+          "required": true
+        },
+        "audience_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "required": true
+        },
+        "idempotency_key": {
+          "type": "string",
+          "format": "uuid",
+          "required": true
+        },
+        "confirmed": {
+          "type": "boolean",
+          "enum": [
+            true
+          ],
+          "required": true
+        }
+      },
+      "name": "PublicationCreateRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_school_publications",
+    "title": "List school publications",
+    "method": "GET",
+    "path": "/publications/",
+    "module": "publications",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "default": ""
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 20
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_received_publications",
+    "title": "List received publications",
+    "method": "GET",
+    "path": "/publications/inbox/",
+    "module": "publications",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "teacher",
+          "guardian"
+        ],
+        "name": "role",
+        "in": "query",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "default": ""
+      },
+      {
+        "type": "boolean",
+        "name": "unread_only",
+        "in": "query",
+        "required": false,
+        "default": false
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 20
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "read_school_publication",
+    "title": "Read school publication",
+    "method": "POST",
+    "path": "/publications/inbox/{publication_id}/read/",
+    "module": "publications",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "publication_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "teacher",
+          "guardian"
+        ],
+        "name": "role",
+        "in": "query",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_school_publication",
+    "title": "Get school publication",
+    "method": "GET",
+    "path": "/publications/{publication_id}/",
+    "module": "publications",
+    "role": "admin",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "publication_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
     "id": "get_school_policies",
     "title": "Get school policies",
     "method": "GET",

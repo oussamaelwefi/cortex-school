@@ -29,7 +29,7 @@ for path, tree in trees.items():
         if isinstance(n, ast.ClassDef):
             if any(ast.unparse(b) in ('StrEnum', 'str, Enum') for b in n.bases):
                 definitions[n.name] = {'type': 'string', 'enum': [literal(v.value) for v in n.body if isinstance(v, ast.Assign)]}
-            elif any('BaseModel' in ast.unparse(b) or ast.unparse(b).endswith('Response') for b in n.bases):
+            elif any('BaseModel' in ast.unparse(b) or ast.unparse(b).endswith(('Response', 'Request')) for b in n.bases):
                 definitions[n.name] = n
         elif isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name) and isinstance(n.value, ast.Subscript):
             aliases[n.targets[0].id] = n.value
@@ -62,7 +62,9 @@ def schema(node, seen=()):
                         result['discriminator'] = keywords(extra)['discriminator']
             return result
         if kind == 'Literal':
-            return {'type':'string','enum':[literal(x) for x in args]}
+            values = [literal(x) for x in args]
+            value_type = 'boolean' if all(type(x) is bool for x in values) else 'integer' if all(type(x) is int for x in values) else 'string'
+            return {'type':value_type,'enum':values}
         if kind == 'list':
             return {'type':'array','items':schema(args[0],seen)}
         if kind == 'dict':
@@ -138,7 +140,7 @@ for path,tree in trees.items():
                 kw = keywords(default) if isinstance(default,ast.Call) else {}
                 info.update({'name':kw.get('alias') or arg.arg,'in':'path' if '{'+arg.arg+'}' in url else 'query','required':default is None,'default':kw.get('default',literal(default))})
                 params.append(info)
-            role = 'onboarding' if module == 'onboarding' and not url.endswith(('/approve', '/reject')) else 'operator' if module == 'onboarding' else 'guardian' if url.startswith('/guardian') else 'teacher' if url.startswith('/teacher') or url=='/ai/teacher-update-draft/' else 'shared' if url in ('/ai/chat/', '/school/context') else 'admin'
+            role = 'onboarding' if module == 'onboarding' and not url.endswith(('/approve', '/reject')) else 'operator' if module == 'onboarding' else 'guardian' if url.startswith('/guardian') else 'teacher' if url.startswith('/teacher') or url=='/ai/teacher-update-draft/' else 'shared' if url in ('/ai/chat/', '/school/context') or url.startswith('/publications/inbox/') else 'admin'
             routes.append({'id':n.name,'title':n.name.replace('_',' ').capitalize(),'method':d.func.attr.upper(),'path':url,'module':module,'role':role,'params':params,'body':body,'upload':upload})
 target = Path(__file__).resolve().parents[1]/'src/contracts.json'
 target.write_text(json.dumps(routes,indent=2),encoding='utf-8')

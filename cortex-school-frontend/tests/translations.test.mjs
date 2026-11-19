@@ -6,6 +6,13 @@ const fr = JSON.parse(
   readFileSync(new URL("../src/fr.json", import.meta.url), "utf8"),
 );
 const tr = (value) => translate(value, "fr", fr);
+
+test("French API errors preserve the request reference while translating the message", () => {
+  assert.equal(
+    tr("The recipients have changed. Review them again before publishing. (Request dc57139b-e39e-4126-9ec9-0796bec082ea)"),
+    "La liste des destinataires a changé. Vérifiez-la à nouveau avant de publier. (Identifiant de la requête : dc57139b-e39e-4126-9ec9-0796bec082ea)",
+  );
+});
 test("French translates core navigation, login, chat and form labels", () => {
   assert.equal(tr("School settings"), "Paramètres de l’école");
   assert.equal(tr("Sign in to your school"), "Se connecter à son école");

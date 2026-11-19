@@ -109,6 +109,7 @@ export const pages: Record<Role, Page[]> = {
       path: "/student-updates/",
       module: "student_updates",
     },
+    { key: "publications", title: "Publications", description: "Send announcements to classes, families, teachers, or students’ families.", path: "/publications/", module: "publications" },
     {
       key: "registrations",
       title: "Registration requests",
@@ -177,6 +178,7 @@ export const pages: Record<Role, Page[]> = {
       module: "student_updates",
       create: "create_update",
     },
+    { key: "publications", title: "Publications", description: "Read announcements from your school administration.", path: "/publications/inbox/", module: "publications" },
     {
       key: "draft",
       title: "AI writing assistant",
@@ -207,6 +209,7 @@ export const pages: Record<Role, Page[]> = {
       path: "/guardian/feed/",
       module: "student_updates",
     },
+    { key: "publications", title: "Publications", description: "Read announcements from your school administration.", path: "/publications/inbox/", module: "publications" },
     {
       key: "tutor",
       title: "Study tutor",

@@ -111,6 +111,33 @@ After changing environment variables, recreate the API container:
 docker compose -f docker/docker-compose.yml --env-file docker/.env up -d --no-deps --force-recreate api
 ```
 
+## School publications
+
+School administrators can publish an announcement to selected active classes,
+family accounts, teachers, or students. A class resolves to its currently enrolled
+students' active family accounts plus its currently assigned active teachers.
+Selecting students delivers to their linked active family accounts, never to a
+student login. Direct account targeting checks the requested role in the same
+WorkOS organization. One account receives one copy, even across multiple classes
+or children. The preview lists actual accounts and warns about students without
+an active linked family account.
+
+The seven `/api/publications/` endpoints provide admin audience options, preview,
+confirmed publication, sent-history and receipt details, plus an authenticated
+teacher/guardian inbox and read action. Admin routes require `school:manage`.
+Publishing rechecks membership and audience, refuses a changed preview, and uses
+an author-scoped idempotency key so a repeated request does not deliver twice.
+Recipient inboxes recheck active membership; student-related messages disappear
+from a guardian's inbox if that guardian is no longer linked to any relevant child.
+Read timestamps are per account and only the administration sees readership lists.
+Delivery is in the application; no email or SMS is sent by this feature.
+
+Before using publications on Railway, apply the additive database migration in the
+backend service's `/app` directory: `python -m alembic upgrade head`. The revision
+`a3b5c7d9e1f2` creates `schoolpublication` and `publicationrecipient`. Deploy the
+backend and frontend together. The API needs `WORKOS_API_KEY`; no new secret or
+Celery task is needed for these durable inbox deliveries.
+
 ## Folders
 
 | Path | What |

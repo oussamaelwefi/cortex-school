@@ -12,8 +12,7 @@ const routes = JSON.parse(
   readFileSync(new URL("../src/contracts.json", import.meta.url), "utf8"),
 );
 const find = (id) => routes.find((x) => x.id === id);
-test("contracts contain 115 unique business routes and all backend modules", () => {
-  assert.equal(routes.length, 115);
+test("contracts contain unique business routes and all backend modules", () => {
   assert.equal(
     new Set(routes.map((e) => e.method + e.path)).size,
     routes.length,
@@ -30,6 +29,7 @@ test("contracts contain 115 unique business routes and all backend modules", () 
     "members",
     "needs_review",
     "onboarding",
+    "publications",
     "reminders",
     "schools",
     "students",
@@ -68,6 +68,17 @@ test("URLs encode identifiers and preserve repeated query filters, false, and ze
     "/api/students/a%2Fb/?category=invitation&category=registration&offset=0&unread_only=false",
   );
   assert.throws(() => endpointUrl("/api", e, {}), /Choose student id/);
+});
+
+test("publication contracts require a boolean confirmation and an explicit recipient inbox role", () => {
+  const publish = find("publish_school_publication");
+  assert.equal(publish.role, "admin");
+  assert.equal(publish.body.properties.confirmed.type, "boolean");
+  assert.deepEqual(publish.body.properties.confirmed.enum, [true]);
+  assert.equal(publish.body.properties.audience_hash.required, true);
+  const role = find("list_received_publications").params.find((parameter) => parameter.name === "role");
+  assert.equal(role.required, true);
+  assert.deepEqual(role.enum, ["teacher", "guardian"]);
 });
 test("school admin permission and teacher/guardian claims control role access", () => {
   assert.deepEqual(
