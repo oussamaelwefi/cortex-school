@@ -234,9 +234,9 @@ provider failures return a safe error rather than an unverified data answer.
 
 ### Chat data privacy controls
 
-Administrators can switch school-data access on/off from **School settings** or
-the chat's **School data access** panel. Guardians have a personal switch in that
-panel. The persisted default preserves existing access until explicitly turned
+Administrators can switch school-data access on/off under **School settings →
+AI settings**. Their chat panel shows read-only access status. Guardians have a
+personal switch in the chat panel. The persisted default preserves existing access until explicitly turned
 off. The school switch blocks both record and policy tools for every role;
 general writing help remains available. Each guardian's preference belongs to
 their user ID and school, and survives school-wide disable/re-enable operations.

@@ -221,8 +221,9 @@ Lookups do not publish, mark messages as read or acknowledge them. Failed reques
 keep the question for an explicit retry. Deploy the backend changes with the
 frontend; the existing LLM and WorkOS configuration stays on the backend.
 
-The chat includes an explicit **School data access** panel. Administrators can
-change school-wide access here and in **School settings**; guardians can opt their
+The chat includes an explicit **School data access** panel. Administrators change
+school-wide access under **School settings → AI settings**; their chat panel
+shows read-only status. Guardians can opt their
 family out. Teachers see the effective status without an editable control.
 Switches persist only after a successful save, and guardian preferences remain
 independent of the school switch. Changing the privacy revision clears old chat

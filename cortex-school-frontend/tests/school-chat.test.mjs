@@ -166,7 +166,7 @@ test("a failed lookup keeps the question and retries it without duplicating the 
   assert.ok(document.querySelector(".chat-sources"));
 });
 
-for (const role of ["admin", "guardian"]) {
+for (const role of ["guardian"]) {
   test(`${role} can disable data access and clear old sourced answers`, async (t) => {
     const api = await mount(t, role);
     await act(async () =>
@@ -199,6 +199,20 @@ for (const role of ["admin", "guardian"]) {
     );
   });
 }
+
+test("admin chat shows read-only data status and directs management to AI settings", async (t) => {
+  const api = await mount(t, "admin");
+  assert.ok(document.querySelector(".chat-access-status"));
+  assert.equal(document.querySelector('[role="switch"]'), null);
+  assert.match(
+    document.querySelector(".chat-access").textContent,
+    /Manage school data access in AI settings/,
+  );
+  assert.equal(
+    api.mock.calls.some((c) => c.arguments[0].method === "PUT"),
+    false,
+  );
+});
 
 test("teacher sees data access status without a setting they cannot change", async (t) => {
   await mount(t, "teacher");

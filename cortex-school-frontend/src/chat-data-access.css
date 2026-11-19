@@ -70,7 +70,7 @@
 .chat-access-error {
   color: #a74f43;
 }
-.school-settings-page > .chat-access {
+#school-ai-settings > .chat-access {
   margin-bottom: 20px;
 }
 @media (max-width: 600px) {

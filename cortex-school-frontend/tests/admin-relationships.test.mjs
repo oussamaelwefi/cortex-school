@@ -58,20 +58,26 @@ test("admin relationships and school settings", async (suite) => {
     dom.window.close();
   });
   async function mount(t, component, props = {}, source = guardians) {
+    const chatAccess = {
+      school_data_enabled: true,
+      personal_data_enabled: true,
+      effective_data_enabled: true,
+      can_manage_school: true,
+      can_manage_personal: false,
+      revision: 0,
+    };
     const api = t.mock.fn(async (endpoint, params, body) => {
       if (endpoint.path.endsWith("/directory/")) return directoryFixture;
       if (endpoint.path === "/school/attendance-settings")
         return endpoint.method === "PUT" ? body : attendanceSettings;
       if (endpoint.path === "/school/ai-settings") return aiSettings;
-      if (endpoint.path === "/ai/chat/access/")
-        return {
-          school_data_enabled: true,
-          personal_data_enabled: true,
-          effective_data_enabled: true,
-          can_manage_school: true,
-          can_manage_personal: false,
-          revision: 0,
-        };
+      if (endpoint.path === "/ai/chat/access/") return { ...chatAccess };
+      if (endpoint.path === "/school/chat-data-settings") {
+        chatAccess.school_data_enabled = body.enabled;
+        chatAccess.effective_data_enabled = body.enabled;
+        chatAccess.revision++;
+        return { ...chatAccess };
+      }
       throw new Error(`Unexpected endpoint ${endpoint.path}`);
     });
     const element = document.createElement("div");
@@ -221,7 +227,8 @@ test("admin relationships and school settings", async (suite) => {
     "settings name all seven weekdays and View AI settings fetches and displays directly",
     async (t) => {
       const { element, api, button } = await mount(t, SchoolSettingsPage);
-      assert.equal(api.mock.callCount(), 2);
+      assert.equal(api.mock.callCount(), 1);
+      assert.equal(element.querySelector('[role="switch"]'), null);
       const weekdays = [...element.querySelectorAll(".ss-weekdays li")];
       assert.deepEqual(
         weekdays.map((entry) => entry.querySelector("strong").textContent),
@@ -239,6 +246,11 @@ test("admin relationships and school settings", async (suite) => {
       assert.equal(weekdays[5].dataset.instructional, "false");
       await act(async () => button("View AI settings").click());
       assert.equal(api.mock.callCount(), 3);
+      const chatSwitch = element.querySelector(
+        '#school-ai-settings [role="switch"]',
+      );
+      assert.ok(chatSwitch);
+      assert.equal(chatSwitch.checked, true);
       assert.equal(api.mock.calls[1].arguments[0].method, "GET");
       assert.match(
         element.querySelector("#school-ai-settings").textContent,
@@ -254,6 +266,19 @@ test("admin relationships and school settings", async (suite) => {
         api.mock.calls.some(
           ({ arguments: [endpoint] }) => endpoint.method !== "GET",
         ),
+        false,
+      );
+      await act(async () => chatSwitch.click());
+      const save = api.mock.calls.at(-1).arguments;
+      assert.equal(save[0].path, "/school/chat-data-settings");
+      assert.equal(save[0].method, "PUT");
+      assert.deepEqual(save[2], { enabled: false });
+      assert.equal(chatSwitch.checked, false);
+      await act(async () => button("Hide AI settings").click());
+      assert.equal(element.querySelector('[role="switch"]'), null);
+      await act(async () => button("View AI settings").click());
+      assert.equal(
+        element.querySelector('#school-ai-settings [role="switch"]').checked,
         false,
       );
     },

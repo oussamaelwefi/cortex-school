@@ -55,7 +55,6 @@ export function SchoolSettingsPage() {
           <SchoolPoliciesButton />
         </div>
       </div>
-      <ChatDataAccessControl role="admin" />
       <section className="panel ss-section">
         <header>
           <div>
@@ -137,6 +136,11 @@ export function SchoolSettingsPage() {
         </header>
         {aiOpen && (
           <div className="ss-content" id="school-ai-settings">
+            <ChatDataAccessControl
+              role="admin"
+              allowSchoolManagement
+              key={refresh}
+            />
             {ai.loading ? (
               <Loading />
             ) : ai.error ? (

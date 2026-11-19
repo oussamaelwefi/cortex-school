@@ -1406,5 +1406,6 @@
   "Get chat data access": "Consulter les paramètres d’accès aux données du chat",
   "Set guardian chat data access": "Modifier la confidentialité des données familiales dans le chat",
   "Set school chat data access": "Modifier l’accès du chat aux données de l’école",
-  "Hello! I can help with writing and general questions. School data lookups are currently turned off for this chat.": "Bonjour ! Je peux vous aider à rédiger et répondre à des questions générales. L’accès aux données scolaires est actuellement désactivé pour ce chat."
+  "Hello! I can help with writing and general questions. School data lookups are currently turned off for this chat.": "Bonjour ! Je peux vous aider à rédiger et répondre à des questions générales. L’accès aux données scolaires est actuellement désactivé pour ce chat.",
+  "Manage school data access in AI settings. Guardian opt-outs always take priority.": "Gérez l’accès aux données scolaires dans les paramètres IA. Le refus des responsables familiaux reste toujours prioritaire."
 }

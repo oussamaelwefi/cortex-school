@@ -16,10 +16,12 @@ export type ChatDataAccess = {
 export function ChatDataAccessControl({
   role,
   disabled = false,
+  allowSchoolManagement = false,
   onChange,
 }: {
   role: Role;
   disabled?: boolean;
+  allowSchoolManagement?: boolean;
   onChange?: (access: ChatDataAccess) => void;
 }) {
   const api = useApi();
@@ -63,6 +65,7 @@ export function ChatDataAccessControl({
 
   async function change(enabled: boolean) {
     if (!access || savingLock.current || disabled) return;
+    if (role === "admin" && !allowSchoolManagement) return;
     savingLock.current = true;
     const request = ++sequence.current;
     setSaving(true);
@@ -94,7 +97,7 @@ export function ChatDataAccessControl({
   const canEdit =
     access &&
     (role === "admin"
-      ? access.can_manage_school
+      ? allowSchoolManagement && access.can_manage_school
       : role === "guardian" && access.can_manage_personal);
   const checked =
     access &&
@@ -124,7 +127,9 @@ export function ChatDataAccessControl({
       <p>
         {t(
           role === "admin"
-            ? "Allow the chat assistant to query school records for all roles. Guardian opt-outs always take priority."
+            ? allowSchoolManagement
+              ? "Allow the chat assistant to query school records for all roles. Guardian opt-outs always take priority."
+              : "Manage school data access in AI settings. Guardian opt-outs always take priority."
             : role === "guardian"
               ? "Turning this off hides your profile and linked children from the chat assistant for everyone, including administrators and teachers. Your normal school access stays available."
               : "Your school controls the assistant’s access to records. Family privacy choices are always enforced.",
