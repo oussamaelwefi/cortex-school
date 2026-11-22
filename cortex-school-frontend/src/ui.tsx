@@ -515,6 +515,26 @@ function nestedEndpoint(e: Endpoint, key: string): Endpoint {
   };
   return paths[key] ? { ...e, path: paths[key] } : e;
 }
+export type RecordTable = {
+  primaryLabel: string;
+  title: (row: Data) => string;
+  subtitle?: (row: Data) => string;
+  columns: { label: string; value: (row: Data) => React.ReactNode }[];
+};
+
+export function RegistrationRequester({ row }: { row: Data }) {
+  return (
+    <div className="registration-requester">
+      <strong>
+        {row.guardian_name || row.guardian_email || t("Guardian profile unavailable")}
+      </strong>
+      {row.guardian_name && row.guardian_email && row.guardian_email !== row.guardian_name && (
+        <span>{row.guardian_email}</span>
+      )}
+    </div>
+  );
+}
+
 export function DataView({
   data,
   endpoint,
@@ -522,6 +542,7 @@ export function DataView({
   onChanged = () => {},
   onSelect,
   rowAction,
+  recordTable,
 }: {
   data: any;
   endpoint: Endpoint;
@@ -529,6 +550,7 @@ export function DataView({
   onChanged?: () => void;
   onSelect?: (row: Data) => void;
   rowAction?: (row: Data) => React.ReactNode;
+  recordTable?: RecordTable;
 }) {
   const [selectedRow, setSelected] = useState<Data | null>(null),
     [op, setOp] = useState<Endpoint | null>(null);
@@ -613,25 +635,49 @@ export function DataView({
       );
     return (
       <>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                {keys.map((k) => (
+        <div className={`table-wrap${recordTable ? " resource-table" : ""}`}>
+          <table role={recordTable ? "table" : undefined}>
+            <thead role={recordTable ? "rowgroup" : undefined}>
+              <tr role={recordTable ? "row" : undefined}>
+                {recordTable ? (
+                  <>
+                    <th scope="col" role="columnheader">{t(recordTable.primaryLabel)}</th>
+                    {recordTable.columns.map((column) => (
+                      <th scope="col" role="columnheader" key={column.label}>
+                        {t(column.label)}
+                      </th>
+                    ))}
+                  </>
+                ) : keys.map((k) => (
                   <th key={k}>
                     {k === "guardian_name" ? t("Requested by") : k === "workos_state" ? t("Invitation status") : label(k)}
                   </th>
                 ))}
-                {hasStudentGuardians && <th>{t("Guardians")}</th>}
-                <th>
-                  {schoolRegistrations ? t("Actions") : <span className="sr-only">{t("Open record")}</span>}
+                {hasStudentGuardians && <th scope="col" role={recordTable ? "columnheader" : undefined}>{t("Guardians")}</th>}
+                <th scope="col" role={recordTable ? "columnheader" : undefined}>
+                  {schoolRegistrations || recordTable ? t("Actions") : <span className="sr-only">{t("Open record")}</span>}
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role={recordTable ? "rowgroup" : undefined}>
               {array.map((row, i) => (
-                <tr key={row.id || row.recipient_id || i}>
-                  {keys.map((k, j) => (
+                <tr role={recordTable ? "row" : undefined} key={row.id || row.recipient_id || (recordTable && row.classroom_id) || i}>
+                  {recordTable ? (
+                    <>
+                      <th scope="row" role="rowheader">
+                        <button type="button" className="record-button" onClick={() => select(row)}>
+                          {recordTable.title(row)}
+                        </button>
+                        {recordTable.subtitle && <small>{recordTable.subtitle(row)}</small>}
+                      </th>
+                      {recordTable.columns.map((column) => (
+                        <td role="cell" key={column.label}>
+                          <span className="resource-cell-label" aria-hidden="true">{t(column.label)}</span>
+                          {column.value(row)}
+                        </td>
+                      ))}
+                    </>
+                  ) : keys.map((k, j) => (
                     <td key={k}>
                       {j === 0 ? (
                         <button
@@ -643,14 +689,7 @@ export function DataView({
                             : display(row)}
                         </button>
                       ) : k === "guardian_name" ? (
-                        <div className="registration-requester">
-                          <strong>
-                            {row.guardian_name || row.guardian_email || t("Guardian profile unavailable")}
-                          </strong>
-                          {row.guardian_name && row.guardian_email && row.guardian_email !== row.guardian_name && (
-                            <span>{row.guardian_email}</span>
-                          )}
-                        </div>
+                        <RegistrationRequester row={row} />
                       ) : k === "roles" ? (
                         <div className="member-roles">
                           {(row.roles || []).map((role: string) => (
@@ -666,15 +705,22 @@ export function DataView({
                       )}
                     </td>
                   ))}
-                  {hasStudentGuardians && <td>{studentId(row) && <StudentGuardians studentId={studentId(row)} guardianIds={row.guardian_ids}/>}</td>}
-                  <td>
+                  {hasStudentGuardians && (
+                    <td role={recordTable ? "cell" : undefined}>
+                      {recordTable && <span className="resource-cell-label" aria-hidden="true">{t("Guardians")}</span>}
+                      {studentId(row) && <StudentGuardians studentId={studentId(row)} guardianIds={row.guardian_ids} />}
+                    </td>
+                  )}
+                  <td role={recordTable ? "cell" : undefined} className={recordTable ? "resource-table-actions" : undefined}>
                     {rowAction?.(row)}
                     <button
+                      type="button"
                       className="icon-button"
-                      aria-label={`Open ${row.name || row.title || row.first_name || "record"}`}
+                      aria-label={recordTable ? `${t("View details")} · ${recordTable.title(row)}` : `Open ${row.name || row.title || row.first_name || "record"}`}
                       onClick={() => select(row)}
                     >
-                      <ChevronRight size={17} />
+                      {recordTable && <span className="resource-action-label">{t("View details")}</span>}
+                      <ChevronRight size={17} aria-hidden="true" />
                     </button>
                   </td>
                 </tr>
@@ -685,6 +731,7 @@ export function DataView({
         {selected && (
           <Modal
             title={
+              recordTable?.title(selected) ||
               selected.title ||
               selected.name ||
               [selected.first_name, selected.last_name]

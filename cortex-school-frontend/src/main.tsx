@@ -100,6 +100,7 @@ import "./student-guardians.css";
 import "./school-settings.css";
 import "./workspace-identity.css";
 import "./chat-data-access.css";
+import "./resource-records.css";
 function Brand() {
   return (
     <div className="brand">

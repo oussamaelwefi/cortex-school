@@ -93,7 +93,7 @@ The guardian overview uses the same child cards. Attendance is available inside
 **My children**; the former `/attendance` page redirects there. Registration
 requests remain in their own workspace.
 
-On generic resource pages, open a record to see related actions with its identifiers prefilled. Their **All workflows** panels expose remaining backend operations as typed forms. Dedicated workspaces such as **Academic years** present their actions directly. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
+On resource pages, open a record to see related actions with its identifiers prefilled. Where available, **All workflows** exposes additional operations as typed forms. Dedicated workspaces such as **Academic years** present their actions directly. Backend-specific business rules and authorization errors are shown from the API. Date/time values are serialized with timezone offsets; the attendance sheet defaults to the server's current school date.
 
 The administrator’s **Invitations** page has role shortcuts, a focused single-person
 form, school-wide status counts, local name/email search, role/status filters,
@@ -129,8 +129,8 @@ Administrators have dedicated **Classrooms** and **Students** directories with
 an academic-year selector. Classroom cards show the teaching team and roster
 count; **View class** opens teachers and students together. Student rows show
 their class, an attendance rate, and a direct class link. Student details retain
-editing, guardian linking, enrollment, and enrollment history. Existing class
-and student operations remain available in **All workflows**.
+editing, guardian linking, enrollment, and enrollment history. Additional student
+operations are available in **All workflows** on the Students page.
 
 Rates cover submitted records from the selected year’s start through today
 (or the year’s end for historical years). Present and late days count as attended;

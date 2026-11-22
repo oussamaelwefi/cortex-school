@@ -499,7 +499,13 @@ function GuardianReminderSources({ sources, defaultExpanded = false }: {
   );
 }
 
-export function GuardianNotifications({ data, onChanged }: { data: Data[]; onChanged: () => void }) {
+export function GuardianNotifications({
+  data,
+  onChanged,
+}: {
+  data: Data[];
+  onChanged: () => void;
+}) {
   const api = useApi();
   const [selected, setSelected] = useState<Data | null>(null);
   const [marking, setMarking] = useState<string | null>(null);
@@ -517,50 +523,89 @@ export function GuardianNotifications({ data, onChanged }: { data: Data[]; onCha
     }
   }
 
-  if (!data.length) return <Empty title="No notifications" text="Notifications from your school will appear here." />;
+  if (!data.length)
+    return (
+      <Empty
+        title="No notifications"
+        text="Notifications from your school will appear here."
+      />
+    );
   return (
-    <div className="feed-list">
+    <div className="feed-list resource-feed-list">
       {error && <ErrorBox error={error} />}
       {data.map((notification) => (
-        <article className="feed-card" key={notification.id}>
+        <article
+          className="feed-card resource-feed-card resource-notification"
+          data-unread={!notification.read_at}
+          key={notification.id}
+        >
           <div className="feed-meta">
-            <span className="avatar"><Bell size={17} /></span>
+            <span className="avatar" aria-hidden="true">
+              <Bell size={19} />
+            </span>
             <div>
-              <strong>{notification.update_title}</strong>
-              <p>{notification.student_first_name} {notification.student_last_name} · {display(notification.created_at)}</p>
+              <h3>{notification.update_title}</h3>
+              <p>
+                {notification.student_first_name}{" "}
+                {notification.student_last_name} ·{" "}
+                <time dateTime={notification.created_at}>
+                  {display(notification.created_at)}
+                </time>
+              </p>
             </div>
             <Badge value={notification.read_at ? "read" : "unread"} />
           </div>
-          <h3>{notification.notification_type === "acknowledgement_reminder"
-            ? t("Acknowledgement reminder") : label(notification.notification_type)}</h3>
-          {notification.message && <p className="prose reminder-copy">{notification.message}</p>}
-          <GuardianReminderSources sources={notification.policy_sources ?? []} />
-          <div className="record-actions">
-            {notification.recipient_id && (
-              <button type="button" className="button small subtle" onClick={() => setSelected(notification)}>
-                {t("Open update")}
-              </button>
-            )}
-            {!notification.read_at && (
-              <button type="button" className="button small subtle" disabled={marking !== null}
-                onClick={() => markRead(notification.id)}>
-                {t("Mark as read")}
-              </button>
-            )}
-          </div>
+          <p className="resource-notification-type">
+            {notification.notification_type === "acknowledgement_reminder"
+              ? t("Acknowledgement reminder")
+              : label(notification.notification_type)}
+          </p>
+          {notification.message && (
+            <p className="prose reminder-copy" dir="auto">
+              {notification.message}
+            </p>
+          )}
+          <GuardianReminderSources
+            sources={notification.policy_sources ?? []}
+          />
+          {(notification.recipient_id || !notification.read_at) && (
+            <div className="record-actions">
+              {notification.recipient_id && (
+                <button
+                  type="button"
+                  className="button small subtle"
+                  onClick={() => setSelected(notification)}
+                >
+                  {t("Open update")}
+                </button>
+              )}
+              {!notification.read_at && (
+                <button
+                  type="button"
+                  className="button small subtle"
+                  disabled={marking !== null}
+                  onClick={() => markRead(notification.id)}
+                >
+                  {t("Mark as read")}
+                </button>
+              )}
+            </div>
+          )}
         </article>
       ))}
       {selected && (
         <GuardianUpdateDialog
           notification={selected}
           onClose={() => setSelected(null)}
-          onAcknowledged={() => { setSelected(null); onChanged(); }}
+          onAcknowledged={() => {
+            setSelected(null);
+            onChanged();
+          }}
         />
       )}
     </div>
   );
 }
-
 export function GuardianUpdateDialog({ notification, onClose, onAcknowledged }: {
   notification: Data;
   onClose: () => void;

@@ -490,14 +490,16 @@ export function AcademicDirectoryPage({
               <RefreshCw size={15} />
               {t("Refresh")}
             </button>
-            <button
-              className="button subtle"
-              onClick={() => setWorkflows(!workflows)}
-              aria-expanded={workflows}
-            >
-              <Settings2 size={15} />
-              {t("All workflows")}
-            </button>
+            {mode === "students" && (
+              <button
+                className="button subtle"
+                onClick={() => setWorkflows(!workflows)}
+                aria-expanded={workflows}
+              >
+                <Settings2 size={15} />
+                {t("All workflows")}
+              </button>
+            )}
             <button
               className="button primary"
               disabled={
@@ -557,15 +559,14 @@ export function AcademicDirectoryPage({
             </>
           )}
         </div>
-        {workflows && (
+        {mode === "students" && workflows && (
           <section className="panel ad-workflows">
             <h2>{t("All workflows")}</h2>
             <div className="record-actions">
               {endpoints
                 .filter(
                   (entry) =>
-                    entry.module ===
-                      (mode === "classrooms" ? "classrooms" : "students") &&
+                    entry.module === "students" &&
                     entry.id !== "get_academic_year_directory",
                 )
                 .map((entry) => (

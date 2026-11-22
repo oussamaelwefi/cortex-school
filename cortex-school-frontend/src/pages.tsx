@@ -1,5 +1,5 @@
 import { t, getLocale } from "./i18n";
-import { useContext, useState } from "react";
+import { useContext, useId, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -19,12 +19,14 @@ import {
   Download,
   Filter,
   Upload,
+  X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApi, endpoints, findEndpoint } from "./api";
 import {
   Badge,
   DataView,
+  display,
   Empty,
   ErrorBox,
   Loading,
@@ -38,6 +40,16 @@ import { ChatAssistant } from "./chat";
 import { GuardianNotifications, GuardianPolicyList, reminderReviewHref, SchoolPoliciesButton } from "./reminders";
 import { GuardianChildCards } from "./guardian-family";
 import { WorkspaceWelcome, workspaceProfiles } from "./workspace-identity";
+
+import {
+  AttendanceOverview,
+  dateLabel,
+  recordTable,
+  resourceCopy,
+  resourceIcons,
+  resourceKey,
+  yearLabel,
+} from "./resource-records";
 
 const registrationDecisions = {
   approve: findEndpoint("POST", "/registration-requests/{request_id}/approve/"),
@@ -253,20 +265,29 @@ export function Heading({
   title,
   description,
   children,
+  icon,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children?: React.ReactNode;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="page-heading">
-      <div>
-        <p className="eyebrow">{t(eyebrow)}</p>
-        <h1>{t(title)}</h1>
-        <p>{t(description)}</p>
+    <div className={`page-heading${icon ? " resource-heading" : ""}`}>
+      <div className={icon ? "resource-heading-title" : undefined}>
+        {icon && (
+          <span className="resource-heading-icon" aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        <div>
+          {!icon && <p className="eyebrow">{t(eyebrow)}</p>}
+          <h1>{t(title)}</h1>
+          <p>{t(description)}</p>
+        </div>
       </div>
-      <div className="heading-actions">{children}</div>
+      {children && <div className="heading-actions">{children}</div>}
     </div>
   );
 }
@@ -674,22 +695,46 @@ export function ResourcePage({
     [search, setSearch] = useState(""),
     [params, setParams] = useState<Data>({}),
     [filters, setFilters] = useState(false),
-    [workflows, setWorkflows] = useState(false);
-  const endpoint = findEndpoint("GET", page.path);
+    [workflows, setWorkflows] = useState(false),
+    [feedStudent, setFeedStudent] = useState("");
+  const filterId = useId();
+  const listId = useId();
+  const layout = resourceKey(role, page.key);
+  const copy = layout && resourceCopy[layout];
+  const Icon = layout && resourceIcons[layout];
+  const showWorkflows =
+    !layout && !(role === "admin" && page.key === "classrooms");
+  const endpoint = findEndpoint(
+    "GET",
+    feedStudent ? "/guardian/students/{student_id}/feed/" : page.path,
+  );
   const values = { ...context, ...params };
-  const required = endpoint?.params.filter((p) => p.in === "path") || [];
+  if (feedStudent) values.student_id = feedStudent;
+  const required = endpoint?.params.filter((p) => p.in === "path") ?? [];
+  const queryFields =
+    endpoint?.params.filter(
+      (p) =>
+        p.in === "query" &&
+        !(layout === "attendance" && p.name === "school_date"),
+    ) ?? [];
   const ready = required.every((p) => values[p.name]);
   const state = useRemote(endpoint, values, refresh, !!endpoint && ready);
   const create = endpoints.find((e) => e.id === page.create && e.role === role);
-  const actions = endpoints.filter(
-    (e) => e.module === page.module && (e.role === role || e.role === "shared"),
-  );
+  const actions = showWorkflows
+    ? endpoints.filter(
+        (e) =>
+          e.module === page.module && (e.role === role || e.role === "shared"),
+      )
+    : [];
   const title = t(page.title);
   const acknowledgementsOnly =
     params.category?.length === 1 && params.category[0] === "acknowledgement";
-  let records = state.data;
+  const attendance = layout === "attendance" ? state.data : null;
+  let records = attendance ? attendance.classrooms : state.data;
   if (schoolMembers && Array.isArray(records)) {
-    const membersById = new Map(schoolMembers.map((member) => [member.id, member]));
+    const membersById = new Map(
+      schoolMembers.map((member) => [member.id, member]),
+    );
     records = records.map((request: Data) => {
       const requester = membersById.get(request.guardian_workos_user_id);
       return {
@@ -699,19 +744,33 @@ export function ResourcePage({
       };
     });
   }
+  const searchTerm = search.trim().toLocaleLowerCase(getLocale());
   const data =
-    Array.isArray(records) && search
-      ? records.filter((x) =>
-          JSON.stringify(x).toLowerCase().includes(search.toLowerCase()),
-        )
+    Array.isArray(records) && searchTerm
+      ? records.filter((row) => {
+          const year = layout && yearLabel(choices, row.academic_year_id);
+          const name =
+            layout === "registrations"
+              ? [row.child_first_name, row.child_last_name]
+                  .filter(Boolean)
+                  .join(" ")
+              : [row.student_first_name, row.student_last_name]
+                  .filter(Boolean)
+                  .join(" ");
+          return [JSON.stringify(row), year, name].some((text) =>
+            text?.toLocaleLowerCase(getLocale()).includes(searchTerm),
+          );
+        })
       : records;
+  const noSearchResults =
+    searchTerm && Array.isArray(data) && !data.length && records.length > 0;
   const reloadRecords = () => setRefresh((x) => x + 1);
   function rowAction(row: Data) {
     if (role !== "admin") return null;
     if (page.key === "registrations") {
-      return row.status === "pending"
-        ? <RegistrationRequestActions request={row} onChanged={reloadRecords} />
-        : null;
+      return row.status === "pending" ? (
+        <RegistrationRequestActions request={row} onChanged={reloadRecords} />
+      ) : null;
     }
     if (page.key === "review" || page.key === "updates") {
       const href = reminderReviewHref(row);
@@ -727,9 +786,9 @@ export function ResourcePage({
   function exportCsv() {
     if (!Array.isArray(data) || !data.length) return;
     const { guardian_name, guardian_email, ...registrationFields } = data[0];
-    const keys = Object.keys(schoolMembers ? registrationFields : data[0]).filter(
-      (k) => typeof data[0][k] !== "object",
-    );
+    const keys = Object.keys(
+      schoolMembers ? registrationFields : data[0],
+    ).filter((k) => typeof data[0][k] !== "object");
     const safe = (x: any) => {
       let s = String(x ?? "");
       if (/^[=+@\-\t\r]/.test(s)) s = "'" + s;
@@ -757,20 +816,34 @@ export function ResourcePage({
   if (page.key === "school-policies")
     return (
       <>
-        <Heading eyebrow="FAMILY WORKSPACE" title={title} description={page.description} />
-        {state.loading ? <Loading /> : state.error ? (
-          <ErrorBox error={state.error} retry={() => setRefresh((value) => value + 1)} />
-        ) : <GuardianPolicyList policies={state.data ?? []} />}
+        <Heading
+          eyebrow="FAMILY WORKSPACE"
+          title={title}
+          description={page.description}
+        />
+        {state.loading ? (
+          <Loading />
+        ) : state.error ? (
+          <ErrorBox
+            error={state.error}
+            retry={() => setRefresh((value) => value + 1)}
+          />
+        ) : (
+          <GuardianPolicyList policies={state.data ?? []} />
+        )}
       </>
     );
   return (
-    <>
+    <div className={layout ? `resource-page resource-${layout}` : undefined}>
       <Heading
         eyebrow={`${role === "admin" ? t("SCHOOL MANAGEMENT") : role === "teacher" ? t("TEACHER WORKSPACE") : t("FAMILY WORKSPACE")}`}
         title={title}
         description={page.description}
+        icon={Icon && <Icon size={25} />}
       >
-        {page.key === "settings" && role === "admin" && <SchoolPoliciesButton />}
+        {page.key === "settings" && role === "admin" && (
+          <SchoolPoliciesButton />
+        )}
         {page.key === "invitations" && role === "admin" && (
           <button
             type="button"
@@ -793,23 +866,52 @@ export function ResourcePage({
             }
           >
             <Bell size={16} />
-            {t(acknowledgementsOnly ? "Clear acknowledgement filter" : "Overdue acknowledgements")}
+            {t(
+              acknowledgementsOnly
+                ? "Clear acknowledgement filter"
+                : "Overdue acknowledgements",
+            )}
           </button>
         )}
-        <button
-          className="button subtle"
-          onClick={() => setWorkflows(!workflows)}
-        >
-          <Sparkles size={16} />
-          {t(" All workflows ")}
-        </button>
+        {showWorkflows && (
+          <button
+            className="button subtle"
+            onClick={() => setWorkflows(!workflows)}
+          >
+            <Sparkles size={16} />
+            {t(" All workflows ")}
+          </button>
+        )}
+        {layout === "updates" && role === "admin" && (
+          <button
+            className="button subtle"
+            type="button"
+            onClick={() =>
+              setOp(findEndpoint("GET", "/student-updates/summary/"))
+            }
+          >
+            <BarChart3 size={16} aria-hidden="true" /> {t("Update summary")}
+          </button>
+        )}
+        {layout === "updates" && role === "teacher" && (
+          <button
+            className="button subtle"
+            type="button"
+            onClick={() =>
+              setOp(findEndpoint("POST", "/teacher/updates/preview/"))
+            }
+          >
+            <Users size={16} aria-hidden="true" /> {t("Preview audience")}
+          </button>
+        )}
         {create && (
           <button className="button primary" onClick={() => setOp(create)}>
-            <Plus size={16} /> {t(create.title)}
+            <Plus size={16} />{" "}
+            {t(layout === "registrations" ? "New request" : create.title)}
           </button>
         )}
       </Heading>
-      {workflows && (
+      {showWorkflows && workflows && (
         <section className="panel workflow-panel">
           <h2>{t(`${title} workflows`)}</h2>
           <p>
@@ -831,81 +933,196 @@ export function ResourcePage({
           </div>
         </section>
       )}
-      <section className="panel">
-        <div className="table-toolbar">
-          <div className="search-input">
-            <Search size={17} />
-            <input
-              aria-label={`Search ${title}`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t(`Search ${title.toLowerCase()}…`)}
-            />
-          </div>
-          <div className="toolbar-actions">
-            {required.map((p) => (
-              <label className="inline-select" key={p.name}>
-                <span className="sr-only">{label(p.name)}</span>
-                {choices[p.name] ? (
-                  <select
-                    aria-label={label(p.name)}
-                    value={values[p.name] || ""}
-                    onChange={(e) =>
-                      setParams({ ...params, [p.name]: e.target.value })
-                    }
-                  >
-                    <option value="">{t(`Select ${label(p.name)}`)}</option>
-                    {choices[p.name].map((x) => (
-                      <option key={x.value} value={x.value}>
-                        {x.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+      {attendance && <AttendanceOverview summary={attendance} />}
+      <section
+        className={`panel${layout ? " resource-panel" : ""}`}
+        aria-labelledby={copy ? listId : undefined}
+      >
+        {copy && (
+          <div className="resource-list-heading">
+            <h2 id={listId}>{t(copy.list)}</h2>
+            {layout === "attendance" && (
+              <div className="resource-date">
+                <label>
+                  <span>{t("Attendance date")}</span>
                   <input
-                    aria-label={label(p.name)}
-                    placeholder={label(p.name)}
-                    value={values[p.name] || ""}
-                    onChange={(e) =>
-                      setParams({ ...params, [p.name]: e.target.value })
+                    type="date"
+                    value={params.school_date ?? attendance?.school_date ?? ""}
+                    onChange={(event) =>
+                      setParams({
+                        ...params,
+                        school_date: event.target.value || undefined,
+                      })
                     }
                   />
+                </label>
+                {params.school_date && (
+                  <button
+                    type="button"
+                    className="button small subtle"
+                    onClick={() =>
+                      setParams({ ...params, school_date: undefined })
+                    }
+                  >
+                    {t("Today")}
+                  </button>
                 )}
-              </label>
-            ))}
-            <button
-              className={`button subtle small ${filters ? "selected" : ""}`}
-              onClick={() => setFilters(!filters)}
-            >
-              <Filter size={15} />
-              {t(" Filters ")}
-            </button>
-            <button
-              className="icon-button"
-              aria-label={t("Refresh records")}
-              onClick={() => setRefresh((x) => x + 1)}
-            >
-              <RefreshCw size={17} />
-            </button>
-            {Array.isArray(data) && data.length > 0 && (
-              <button
-                className="icon-button"
-                aria-label={t("Export records as CSV")}
-                onClick={exportCsv}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="table-toolbar">
+          {layout === "enrollments" && (
+            <label className="resource-selection">
+              <span>{t("Student")}</span>
+              <select
+                value={values.student_id || ""}
+                onChange={(event) =>
+                  setParams({ ...params, student_id: event.target.value })
+                }
               >
-                <Download size={17} />
+                <option value="">{t("Select student")}</option>
+                {choices.student_id?.map((student) => (
+                  <option key={student.value} value={student.value}>
+                    {student.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="search-input">
+            <Search size={17} aria-hidden="true" />
+            <input
+              aria-label={t("Search records")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t(`Search ${page.title.toLowerCase()}…`)}
+            />
+            {layout && search && (
+              <button
+                className="icon-button resource-clear-search"
+                type="button"
+                aria-label={t("Clear search")}
+                onClick={() => setSearch("")}
+              >
+                <X size={16} aria-hidden="true" />
               </button>
             )}
           </div>
+          <div className="toolbar-actions">
+            {layout === "feed" && choices.student_id?.length > 0 && (
+              <label className="resource-selection">
+                <span className="sr-only">{t("Child")}</span>
+                <select
+                  value={feedStudent}
+                  onChange={(event) => {
+                    setFeedStudent(event.target.value);
+                    setParams((current) => ({ ...current, offset: undefined }));
+                  }}
+                >
+                  <option value="">{t("All children")}</option>
+                  {choices.student_id.map((student) => (
+                    <option key={student.value} value={student.value}>
+                      {student.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {!layout &&
+              required.map((p) => (
+                <label className="inline-select" key={p.name}>
+                  <span className="sr-only">{label(p.name)}</span>
+                  {choices[p.name] ? (
+                    <select
+                      aria-label={label(p.name)}
+                      value={values[p.name] || ""}
+                      onChange={(e) =>
+                        setParams({ ...params, [p.name]: e.target.value })
+                      }
+                    >
+                      <option value="">{t(`Select ${label(p.name)}`)}</option>
+                      {choices[p.name].map((x) => (
+                        <option key={x.value} value={x.value}>
+                          {x.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      aria-label={label(p.name)}
+                      placeholder={label(p.name)}
+                      value={values[p.name] || ""}
+                      onChange={(e) =>
+                        setParams({ ...params, [p.name]: e.target.value })
+                      }
+                    />
+                  )}
+                </label>
+              ))}
+            {(!layout || queryFields.length > 0) && (
+              <button
+                className={`button subtle small ${filters ? "selected" : ""}`}
+                type="button"
+                aria-expanded={filters}
+                aria-controls={filters ? filterId : undefined}
+                onClick={() => setFilters(!filters)}
+              >
+                <Filter size={15} aria-hidden="true" />
+                {t("Filters")}
+              </button>
+            )}
+            <button
+              className="icon-button"
+              aria-label={t("Refresh records")}
+              title={layout ? t("Refresh records") : undefined}
+              onClick={reloadRecords}
+            >
+              <RefreshCw size={17} />
+            </button>
+            {layout !== "attendance" &&
+              Array.isArray(data) &&
+              data.length > 0 && (
+                <button
+                  className="icon-button"
+                  aria-label={t("Export records as CSV")}
+                  title={layout ? t("Export records as CSV") : undefined}
+                  onClick={exportCsv}
+                >
+                  <Download size={17} />
+                </button>
+              )}
+          </div>
         </div>
         {filters && (
-          <div className="filter-bar">
-            {endpoint?.params
-              .filter((p) => p.in === "query")
-              .map((p) => (
+          <div className="filter-bar" id={filterId}>
+            {queryFields.map((p) => {
+              const filterChoices =
+                layout === "updates" &&
+                (p.name === "teacher_id"
+                  ? choices.teacher_workos_user_id
+                  : p.name === "student_id" ||
+                      (role === "teacher" && p.name === "classroom_id")
+                    ? choices[p.name]
+                    : undefined);
+              return (
                 <label className="field" key={p.name}>
                   <span>{label(p.name)}</span>
-                  {p.type === "array" && p.items?.enum ? (
+                  {filterChoices && filterChoices.length > 0 ? (
+                    <select
+                      value={params[p.name] ?? ""}
+                      onChange={(event) =>
+                        setParams({ ...params, [p.name]: event.target.value })
+                      }
+                    >
+                      <option value="">{t("All")}</option>
+                      {filterChoices.map((choice) => (
+                        <option key={choice.value} value={choice.value}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : p.type === "array" && p.items?.enum ? (
                     <select
                       multiple
                       aria-label={label(p.name)}
@@ -968,8 +1185,9 @@ export function ResourcePage({
                     />
                   )}
                 </label>
-              ))}
-            {!endpoint?.params.some((p) => p.in === "query") && (
+              );
+            })}
+            {!queryFields.length && (
               <p>{t("Use search to find a record in this list.")}</p>
             )}
             <button className="text-button" onClick={() => setParams({})}>
@@ -979,8 +1197,16 @@ export function ResourcePage({
         )}
         {!ready ? (
           <Empty
-            title={t("Choose a record to get started")}
-            text="Select the year, student, or classroom above to see its records."
+            title={
+              layout === "enrollments"
+                ? "Select a student"
+                : "Choose a record to get started"
+            }
+            text={
+              layout === "enrollments"
+                ? "Choose a student to view their enrollment history."
+                : "Select the year, student, or classroom above to see its records."
+            }
           />
         ) : state.loading ? (
           <Loading />
@@ -989,6 +1215,13 @@ export function ResourcePage({
             error={state.error}
             retry={() => setRefresh((x) => x + 1)}
           />
+        ) : layout && noSearchResults ? (
+          <Empty
+            title="No matching records"
+            text="Try a different search term."
+          />
+        ) : copy && Array.isArray(data) && !data.length ? (
+          <Empty title={copy.empty} text={copy.note} />
         ) : (
           <>
             {page.key === "settings" && (
@@ -1036,20 +1269,38 @@ export function ResourcePage({
                 context={values}
                 onChanged={reloadRecords}
                 rowAction={rowAction}
+                recordTable={recordTable(layout, role, choices)}
               />
             )}
           </>
         )}
-        <div className="table-footer">
-          <span>
-            {Array.isArray(data)
-              ? t(`${data.length} records shown`)
-              : t("School workspace")}
-          </span>
-          <span>
-            {state.loading ? t("Updating…") : t("Connected to your community")}
-          </span>
-        </div>
+        {layout ? (
+          ready &&
+          Array.isArray(data) &&
+          !state.loading &&
+          !state.error && (
+            <div className="table-footer" role="status">
+              {t(
+                data.length === 1
+                  ? "1 record shown"
+                  : `${data.length} records shown`,
+              )}
+            </div>
+          )
+        ) : (
+          <div className="table-footer">
+            <span>
+              {Array.isArray(data)
+                ? t(`${data.length} records shown`)
+                : t("School workspace")}
+            </span>
+            <span>
+              {state.loading
+                ? t("Updating…")
+                : t("Connected to your community")}
+            </span>
+          </div>
+        )}
       </section>
       {op && (
         <Operation
@@ -1060,7 +1311,7 @@ export function ResourcePage({
           onDone={() => setRefresh((x) => x + 1)}
         />
       )}
-    </>
+    </div>
   );
 }
 function Feed({ data, onChanged }: { data: Data[]; onChanged: () => void }) {
@@ -1074,28 +1325,46 @@ function Feed({ data, onChanged }: { data: Data[]; onChanged: () => void }) {
       />
     );
   return (
-    <div className="feed-list">
+    <div className="feed-list resource-feed-list">
       {data.map((item) => (
-        <article className="feed-card" key={item.recipient_id}>
+        <article
+          className="feed-card resource-feed-card"
+          key={item.recipient_id}
+        >
           <div className="feed-meta">
-            <span className="avatar">
-              {item.student_first_name?.[0] || "S"}
+            <span className="avatar" aria-hidden="true">
+              {item.student_first_name?.[0]}
+              {item.student_last_name?.[0]}
             </span>
             <div>
               <strong>
                 {item.student_first_name} {item.student_last_name}
               </strong>
-              <p>{item.classroom_name}</p>
+              <p>
+                {[item.classroom_name, item.author_label]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
             </div>
-            <Badge value={item.status} />
+            <span className="resource-badges">
+              <Badge value={item.status} />
+              {item.is_overdue && <Badge value="overdue" />}
+            </span>
           </div>
-          <h2>{item.title}</h2>
-          <p className="prose">{item.body}</p>
+          <h3>{item.title}</h3>
+          <time className="resource-feed-date" dateTime={item.created_at}>
+            {dateLabel(item.created_at)}
+          </time>
+          {item.body && (
+            <p className="prose" dir="auto">
+              {item.body}
+            </p>
+          )}
           {item.due_at && (
             <p className="deadline">
-              <Clock size={14} />
-              {t(" Due")}{" "}
-              {new Date(item.due_at).toLocaleDateString(getLocale())}
+              <Clock size={15} aria-hidden="true" />
+              {t("Due")}{" "}
+              <time dateTime={item.due_at}>{display(item.due_at)}</time>
             </p>
           )}
           <div className="record-actions">
@@ -1128,17 +1397,17 @@ function Feed({ data, onChanged }: { data: Data[]; onChanged: () => void }) {
                     ],
                   ]
                 : []),
-            ].map(([m, p, t]) => (
+            ].map(([method, path, title]) => (
               <button
-                className="button subtle small"
-                key={p}
+                type="button"
+                className={`button small ${path.endsWith("/acknowledge/") && !item.acknowledged_at ? "primary" : "subtle"}`}
+                key={path}
                 onClick={() => {
                   setContext(item);
-                  setOp(findEndpoint(m, p));
+                  setOp(findEndpoint(method, path));
                 }}
               >
-                {t}
-                <ArrowUpRight size={13} />
+                {title}
               </button>
             ))}
           </div>
