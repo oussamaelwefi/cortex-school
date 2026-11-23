@@ -26,6 +26,11 @@ server {
             client_max_body_size 11m;
             proxy_pass $backend_origin;
         }
+
+        location ~ ^/api/teacher/classrooms/[^/]+/study-materials/?$ {
+            client_max_body_size 11m;
+            proxy_pass $backend_origin;
+        }
     }
 
     # PDF.js ships a module worker, which requires a JavaScript MIME type.

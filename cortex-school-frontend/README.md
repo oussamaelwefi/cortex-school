@@ -160,6 +160,19 @@ Guardians can read their school’s uploaded PDFs online from **School policies*
 
 Administrators can preview, download, or delete policies in **School settings → School policies**. Deleting a policy removes the original from the family workspace and its passages from future searches. Existing reminder proposals keep the citations recorded when they were drafted.
 
+## Classroom study materials
+
+Teachers can open **My classrooms → Study materials** in a current class. Add a
+lesson title and subject, choose a PDF with selectable text, then use **Index and
+publish**. The PDF can be shared with other current classes in the same upload.
+Choose an unlocked PDF up to 10 MB and 100 pages. An optional grade level guides
+the tutor’s explanations and exercises.
+
+In **Study tutor**, guardians choose a linked child and a document from that
+child’s current class. They can request explanations, summaries, quizzes, and
+practice tests in Arabic, French, or English, with citations that open the source
+page. Existing school-wide books are available under **School library**.
+
 ## School publications
 
 The **Publications** navigation item is available in administration, teacher, and

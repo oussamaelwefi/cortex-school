@@ -136,6 +136,8 @@ for path,tree in trees.items():
                 if 'UploadFile' in ast.unparse(arg.annotation) if arg.annotation else False:
                     upload = True
                     continue
+                if default and isinstance(default, ast.Call) and ast.unparse(default.func) == 'Form':
+                    continue
                 info = schema(arg.annotation)
                 kw = keywords(default) if isinstance(default,ast.Call) else {}
                 info.update({'name':kw.get('alias') or arg.arg,'in':'path' if '{'+arg.arg+'}' in url else 'query','required':default is None,'default':kw.get('default',literal(default))})

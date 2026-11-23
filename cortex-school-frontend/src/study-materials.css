@@ -1,0 +1,114 @@
+.teacher-study-materials {
+  padding-bottom: 18px;
+}
+
+.study-material-form {
+  margin: 0 20px 18px;
+  padding: 18px;
+  border: 1px solid var(--ui-accent-border, var(--line));
+  border-radius: 12px;
+  background: var(--ui-surface, #f7f9f5);
+}
+
+.study-material-form > fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 14px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.study-material-form .field {
+  margin: 0;
+}
+
+.study-material-file,
+.study-material-classes {
+  grid-column: 1 / -1;
+}
+
+.study-material-classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  border: 0;
+  min-width: 0;
+  padding: 4px 0 0;
+  margin: 0;
+}
+
+.study-material-classes legend {
+  font-weight: 700;
+}
+
+.study-material-classes label,
+.study-material-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.study-material-actions {
+  margin-top: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.study-material-notice {
+  color: var(--ui-accent-ink, #214e40);
+  margin: 0 20px 14px;
+}
+
+.study-material-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0 20px;
+  padding: 0;
+}
+
+.study-material-list li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--ui-line, var(--line));
+  border-radius: 9px;
+}
+
+.study-material-list li > div {
+  flex: 1 1 170px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.study-material-list li > svg {
+  color: var(--ui-accent, var(--green));
+}
+
+.study-material-list p {
+  margin: 3px 0 0;
+  color: var(--ui-muted, #596b61);
+  font-size: 0.92rem;
+}
+
+.tutor-library-picker {
+  padding: 14px 20px;
+  margin-bottom: 14px;
+}
+
+.tutor-library-picker .field,
+.tutor-document-select {
+  max-width: 420px;
+}
+
+.tutor-library-picker .field {
+  margin: 0;
+}
+
+.tutor-document-select {
+  margin-bottom: 14px;
+}

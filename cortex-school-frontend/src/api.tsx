@@ -48,7 +48,9 @@ export function makeApi(
     if (!token) throw rejectSession();
     const headers: Record<string, string> = {};
     let payload: BodyInit | undefined;
-    if (file) {
+    if (body instanceof FormData) {
+      payload = body;
+    } else if (file) {
       const form = new FormData();
       form.append("file", file);
       payload = form;

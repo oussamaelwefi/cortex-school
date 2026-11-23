@@ -95,6 +95,7 @@ import "./school-members.css";
 import "./academic-directory.css";
 import "./academic-years.css";
 import "./teacher-classrooms.css";
+import "./study-materials.css";
 import "./teacher-draft-review.css";
 import "./student-guardians.css";
 import "./school-settings.css";

@@ -26,6 +26,7 @@ import {
 import { findEndpoint } from "./api";
 import { getLocale, t, useLanguage } from "./i18n";
 import { ChoicesContext, ErrorBox, Loading, Operation, useRemote } from "./ui";
+import { TeacherStudyMaterials } from "./teacher-study-materials";
 
 export type TeacherClassroom = {
   id: string;
@@ -65,6 +66,7 @@ type CalendarEntry = {
 };
 type Remote<T> = { data: T | null; loading: boolean; error: string };
 type Composer = { classroom: TeacherClassroom; student?: Student };
+type ClassTab = "students" | "calendar" | "materials";
 const todayEndpoint = findEndpoint("GET", "/teacher/today");
 const rosterEndpoint = findEndpoint(
   "GET",
@@ -289,18 +291,20 @@ function ClassCard({
 
 function ClassWorkspace({
   classroom,
+  classrooms,
   onBack,
   onCompose,
   onRefresh,
   revision,
 }: {
   classroom: TeacherClassroom;
+  classrooms: TeacherClassroom[];
   onBack: () => void;
   onCompose: (student?: Student) => void;
   onRefresh: () => void;
   revision: number;
 }) {
-  const [tab, setTab] = useState<"students" | "calendar">("students");
+  const [selectedTab, setTab] = useState<ClassTab>("students");
   const [calendarOpened, setCalendarOpened] = useState(false);
   const [query, setQuery] = useState("");
   const roster = useRemote(
@@ -332,26 +336,23 @@ function ClassWorkspace({
       a.title.localeCompare(b.title, getLocale()),
   );
   const current = classroom.access_status === "current";
+  const tab = !current && selectedTab === "materials" ? "students" : selectedTab;
+  const tabs: ClassTab[] = current ? ["students", "calendar", "materials"] : ["students", "calendar"];
   const panelId = `classroom-${classroom.id}`;
-  function selectTab(next: "students" | "calendar") {
+  function selectTab(next: ClassTab) {
     if (next === "calendar") setCalendarOpened(true);
     setTab(next);
   }
   function navigateTabs(event: KeyboardEvent<HTMLDivElement>) {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
-    const next =
-      event.key === "Home"
-        ? "students"
-        : event.key === "End"
-          ? "calendar"
-          : tab === "students"
-            ? "calendar"
-            : "students";
-    selectTab(next);
+    const offset = event.key === "ArrowLeft" ? -1 : 1;
+    const index = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+      : (tabs.indexOf(tab) + offset + tabs.length) % tabs.length;
+    selectTab(tabs[index]);
     event.currentTarget
       .querySelectorAll<HTMLButtonElement>('[role="tab"]')
-      [next === "students" ? 0 : 1]?.focus();
+      [index]?.focus();
   }
 
   return (
@@ -429,6 +430,19 @@ function ClassWorkspace({
             <CalendarDays size={17} />
             {t("Calendar")}
           </button>
+          {current && (
+            <button
+              id={`${panelId}-materials-tab`}
+              role="tab"
+              aria-selected={tab === "materials"}
+              tabIndex={tab === "materials" ? 0 : -1}
+              aria-controls={`${panelId}-materials`}
+              onClick={() => selectTab("materials")}
+            >
+              <BookOpen size={17} aria-hidden="true" />
+              {t("Study materials")}
+            </button>
+          )}
         </div>
         {tab === "students" ? (
           <div
@@ -507,6 +521,10 @@ function ClassWorkspace({
                 </p>
               </div>
             )}
+          </div>
+        ) : current && tab === "materials" ? (
+          <div role="tabpanel" id={`${panelId}-materials`} aria-labelledby={`${panelId}-materials-tab`}>
+            <TeacherStudyMaterials classroom={classroom} classrooms={classrooms} revision={revision} />
           </div>
         ) : (
           <div
@@ -674,6 +692,7 @@ export function TeacherClassroomsPage({
             <ClassWorkspace
               key={selected.id}
               classroom={selected}
+              classrooms={records}
               revision={revision}
               onBack={() => open()}
               onCompose={(student) =>

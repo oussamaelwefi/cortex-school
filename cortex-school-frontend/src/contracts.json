@@ -3623,10 +3623,219 @@
           "nullable": true,
           "required": false,
           "ge": 1
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "ar",
+            "fr",
+            "en"
+          ],
+          "nullable": true,
+          "required": false
         }
       },
       "name": "StudyRequest"
     },
+    "upload": false
+  },
+  {
+    "id": "list_guardian_tutor_children",
+    "title": "List guardian tutor children",
+    "method": "GET",
+    "path": "/guardian/tutor/children/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "list_guardian_study_materials",
+    "title": "List guardian study materials",
+    "method": "GET",
+    "path": "/guardian/tutor/children/{student_id}/materials/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "open_guardian_study_material",
+    "title": "Open guardian study material",
+    "method": "GET",
+    "path": "/guardian/tutor/children/{student_id}/materials/{material_id}/pdf/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "material_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "create_guardian_class_study_activity",
+    "title": "Create guardian class study activity",
+    "method": "POST",
+    "path": "/guardian/tutor/children/{student_id}/materials/{material_id}/study/",
+    "module": "tutor",
+    "role": "guardian",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "student_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "material_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "search",
+            "explain",
+            "summary",
+            "quiz",
+            "practice"
+          ],
+          "required": true
+        },
+        "topic": {
+          "type": "string",
+          "max_length": 500,
+          "required": false,
+          "default": ""
+        },
+        "start_page": {
+          "type": "integer",
+          "nullable": true,
+          "required": false,
+          "ge": 1
+        },
+        "end_page": {
+          "type": "integer",
+          "nullable": true,
+          "required": false,
+          "ge": 1
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "ar",
+            "fr",
+            "en"
+          ],
+          "nullable": true,
+          "required": false
+        }
+      },
+      "name": "StudyRequest"
+    },
+    "upload": false
+  },
+  {
+    "id": "list_teacher_study_materials",
+    "title": "List teacher study materials",
+    "method": "GET",
+    "path": "/teacher/classrooms/{classroom_id}/study-materials/",
+    "module": "tutor",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "publish_teacher_study_material",
+    "title": "Publish teacher study material",
+    "method": "POST",
+    "path": "/teacher/classrooms/{classroom_id}/study-materials/",
+    "module": "tutor",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": true
+  },
+  {
+    "id": "unpublish_teacher_study_material",
+    "title": "Unpublish teacher study material",
+    "method": "DELETE",
+    "path": "/teacher/classrooms/{classroom_id}/study-materials/{material_id}/",
+    "module": "tutor",
+    "role": "teacher",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "classroom_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "material_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      }
+    ],
+    "body": null,
     "upload": false
   }
 ]

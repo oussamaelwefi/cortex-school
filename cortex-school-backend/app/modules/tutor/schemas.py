@@ -14,6 +14,25 @@ class TutorBookResponse(BaseModel):
     indexed_page_count: int
 
 
+class TutorMaterialResponse(TutorBookResponse):
+    subject: str
+    grade_level: int | None
+
+
+class TutorChildResponse(BaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+    classroom_name: str | None
+
+
+class PublishTutorMaterialRequest(BaseModel):
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+    subject: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    grade_level: int | None = Field(default=None, ge=1, le=13)
+    additional_classroom_ids: list[uuid.UUID] = Field(default_factory=list, max_length=19)
+
+
 class TutorSource(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -27,6 +46,7 @@ class StudyRequest(BaseModel):
     topic: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] = ""
     start_page: int | None = Field(default=None, ge=1)
     end_page: int | None = Field(default=None, ge=1)
+    language: Literal["ar", "fr", "en"] | None = None
 
     @model_validator(mode="after")
     def require_topic_or_range(self):
