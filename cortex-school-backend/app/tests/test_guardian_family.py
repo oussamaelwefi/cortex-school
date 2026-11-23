@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -79,8 +79,8 @@ def _stamp(value: datetime) -> datetime:
     return value.replace(microsecond=0)
 
 
-async def _seed_family(session):
-    now = _stamp(utcnow())
+async def _seed_family(session, *, now: datetime | None = None):
+    now = _stamp(now if now is not None else utcnow())
     school_date = now.astimezone(ZoneInfo("Africa/Tunis")).date()
     year_start = school_date - timedelta(days=30)
     year_end = school_date + timedelta(days=300)
@@ -612,12 +612,29 @@ class _WeeklyFakeChain:
         }
 
 
+@pytest.fixture
+def weekly_now(monkeypatch, request):
+    now = datetime(2026, 11, getattr(request, "param", 25), 12, tzinfo=timezone.utc)
+    monkeypatch.setattr("modules.attendance.services.utcnow", lambda: now)
+    return now
+
+
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("weekly_now", "missing_dates"),
+    [
+        pytest.param(23, [], id="monday"),
+        pytest.param(25, [date(2026, 11, 23), date(2026, 11, 24)], id="wednesday"),
+    ],
+    indirect=["weekly_now"],
+)
 async def test_guardian_weekly_explanation_is_scoped_and_grounded(
     db_session,
     monkeypatch,
+    weekly_now,
+    missing_dates,
 ):
-    seeded = await _seed_family(db_session)
+    seeded = await _seed_family(db_session, now=weekly_now)
     guardian = {"user_id": GUARDIAN_A, "organization_id": ORG_A}
     await db_session.execute(
         update(School)
@@ -669,8 +686,10 @@ async def test_guardian_weekly_explanation_is_scoped_and_grounded(
     assert response.status == "generated"
     assert response.ai_generated is True
     assert response.output_language.value == "fr"
+    assert response.date_from == date(2026, 11, 23)
+    assert response.date_to == seeded["school_date"]
     assert response.attendance.counts.present == 1
-    assert response.attendance.missing_dates
+    assert response.attendance.missing_dates == missing_dates
     assert [source.kind for source in response.sources] == [
         "attendance",
         "update",
@@ -688,8 +707,9 @@ async def test_guardian_weekly_explanation_is_scoped_and_grounded(
 async def test_guardian_weekly_explanation_returns_deterministic_fallback(
     db_session,
     monkeypatch,
+    weekly_now,
 ):
-    seeded = await _seed_family(db_session)
+    seeded = await _seed_family(db_session, now=weekly_now)
     guardian = {"user_id": GUARDIAN_A, "organization_id": ORG_A}
     await db_session.execute(
         update(School)
