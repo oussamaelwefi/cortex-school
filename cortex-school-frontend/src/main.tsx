@@ -319,6 +319,7 @@ function Authenticated() {
         name={auth.user?.firstName || ""}
         email={auth.user?.email || ""}
         organization={claims.org_id}
+        getAccessToken={auth.getAccessToken}
         onExit={() => auth.signOut()}
       />
       </CurrentUserContext.Provider>
@@ -355,12 +356,14 @@ function Shell({
   name,
   email,
   organization,
+  getAccessToken,
   onExit,
 }: {
   roles: Role[];
   name: string;
   email: string;
   organization?: string;
+  getAccessToken: () => Promise<string | undefined>;
   onExit: () => void;
 }) {
   const [revision, setRevision] = useState(0);
@@ -641,7 +644,10 @@ function Shell({
                       ) : role === "admin" && page.key === "review" ? (
                         <NeedsReviewPage />
                       ) : role === "admin" && page.key === "invitations" ? (
-                        <InvitationsPage />
+                        <InvitationsPage
+                          key={organization}
+                          getAccessToken={getAccessToken}
+                        />
                       ) : role === "admin" && page.key === "members" ? (
                         <SchoolMembersPage
                           members={members.data}

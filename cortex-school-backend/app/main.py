@@ -15,6 +15,7 @@ from core.db import close_db_connections
 from core.operator_login import router as operator_login_router
 from core.request_id import RequestIdMiddleware
 from modules import api_router
+from modules.invitations.live import router as invitation_updates_router
 
 
 infrastructure_router = APIRouter(include_in_schema=False)
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(RequestIdMiddleware)
     app.include_router(api_router)
+    app.include_router(invitation_updates_router)
     app.include_router(infrastructure_router)
     if settings.WORKOS_OPERATOR_USER_IDS and len(settings.ADMIN_SESSION_SECRET) >= 32:
         app.add_middleware(

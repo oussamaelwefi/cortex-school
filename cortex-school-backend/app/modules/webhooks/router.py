@@ -7,6 +7,7 @@ from core.auth import WORKOS_CLIENT_ID
 from core.config import settings
 from core.db import db_session
 from core.router import APIRouter
+from modules.invitations.live import publish_invitation_change
 from modules.invitations.models import Invitation, InvitationSendStatus
 
 PUBLIC = True
@@ -86,4 +87,5 @@ async def handle_workos_webhook(
     ):
         invitation.expires_at = data.expires_at
     await session.commit()
+    await publish_invitation_change(invitation.organization_id)
     return {"received": True}

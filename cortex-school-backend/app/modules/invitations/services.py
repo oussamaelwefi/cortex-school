@@ -16,6 +16,7 @@ from workos.user_management.models import UserInvite
 
 from core.config import settings
 from core.db import SessionLocal, utcnow
+from modules.invitations.live import publish_invitation_change
 from modules.invitations.models import (
     Invitation,
     InvitationCsvRoleMode,
@@ -214,6 +215,7 @@ async def mark_invitation_enqueue_failed(
     invitation.send_status = InvitationSendStatus.FAILED
     invitation.error_message = error_message
     await session.commit()
+    await publish_invitation_change(invitation.organization_id)
     await session.refresh(invitation)
     return invitation
 
@@ -361,6 +363,7 @@ async def process_invitation(invitation_id: uuid.UUID) -> dict[str, Any]:
             invitation.error_message = str(exc)
 
         await session.commit()
+        await publish_invitation_change(invitation.organization_id)
         await session.refresh(invitation)
         return {
             "id": str(invitation.id),

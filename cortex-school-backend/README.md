@@ -48,9 +48,16 @@ Reconciliation checks exact invitation IDs, organization and email; an active
 membership alone does not count as acceptance of a particular invitation. A
 concurrent acceptance is never replaced by an older pending snapshot.
 
-The administrator page refreshes every 15 seconds while visible and when returning
-to the tab. Manual refresh remains available. If WorkOS cannot be checked, the API
-returns a retryable error and the frontend retains its last available results.
+The administrator page receives live invitation updates through `/api/invitations/ws`.
+The API and worker publish school-scoped refresh events over Redis. On Railway,
+deploy the API, worker, and frontend together and point the API and worker at the
+same Redis broker with `CELERY_BROKER_URL` and the same `ENVIRONMENT` value. The
+frontend proxy forwards WebSocket upgrades on the app's public domain.
+
+The visible page reconciles every 60 seconds while connected and polls every 15
+seconds while disconnected. It also refreshes when returning to the tab. Manual
+refresh remains available. If WorkOS cannot be checked, the API returns a retryable
+error and the frontend retains its last available results.
 
 ## Local Docker runtime for this checkout
 

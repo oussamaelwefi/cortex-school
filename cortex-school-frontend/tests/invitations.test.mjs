@@ -154,7 +154,9 @@ test("administrator invitation workspace", async (suite) => {
           createElement(
             ApiContext.Provider,
             { value: api },
-            createElement(InvitationsPage),
+            createElement(InvitationsPage, {
+              getAccessToken: options.getAccessToken,
+            }),
           ),
         ),
       ),
@@ -518,6 +520,90 @@ test("administrator invitation workspace", async (suite) => {
         cleared.mock.calls.some((call) => call.arguments[0] === 12345),
         true,
       );
+    },
+  );
+  await suite.test(
+    "live events trigger a follow-up refresh and polling resumes on disconnect",
+    async (t) => {
+      const connections = [];
+      class TestSocket {
+        static OPEN = 1;
+        readyState = 0;
+        constructor(url) {
+          this.url = url.href;
+          connections.push(this);
+        }
+        open() {
+          this.readyState = TestSocket.OPEN;
+          return this.onopen();
+        }
+        send(token) {
+          this.token = token;
+        }
+        event(type) {
+          this.onmessage({ data: JSON.stringify({ type }) });
+        }
+        close() {
+          this.readyState = 3;
+          this.onclose?.();
+        }
+      }
+      const originalWebSocket = window.WebSocket;
+      window.WebSocket = TestSocket;
+      t.after(() => {
+        window.WebSocket = originalWebSocket;
+      });
+      const poll = t.mock.method(window, "setInterval", () => 12345);
+      const timeout = window.setTimeout.bind(window);
+      let reconnect;
+      t.mock.method(window, "setTimeout", (callback, delay) => {
+        if (delay !== 1000) return timeout(callback, delay);
+        reconnect = callback;
+        return 23456;
+      });
+
+      let finish,
+        lists = 0;
+      const { api, container, data, root } = await mount(t, {
+        getAccessToken: async () => "workos-token",
+        read: () => {
+          if (++lists === 2)
+            return new Promise((resolve) => {
+              finish = resolve;
+            });
+        },
+      });
+      const first = connections[0];
+      assert.equal(first.url, "ws://localhost/api/invitations/ws");
+      await act(async () => first.open());
+      assert.equal(first.token, "workos-token");
+      await act(async () => first.event("invitations.ready"));
+      assert.equal(poll.mock.calls.at(-1).arguments[1], 60000);
+
+      const previous = [...data];
+      data[0] = { ...data[0], workos_state: "accepted" };
+      await act(async () => first.event("invitations.changed"));
+      assert.equal(api.mock.callCount(), 2);
+      await act(async () => finish(previous));
+      assert.equal(api.mock.callCount(), 3);
+      const updated = [...container.querySelectorAll("tbody tr")].find((row) =>
+        row.textContent.includes("Amira"),
+      );
+      assert.match(updated.textContent, /Joined the school/);
+
+      await act(async () => first.close());
+      const [pollNow, pollDelay] = poll.mock.calls.at(-1).arguments;
+      assert.equal(pollDelay, invitationRefreshMs);
+      await act(async () => pollNow());
+      assert.equal(api.mock.callCount(), 4);
+
+      await act(async () => reconnect());
+      const second = connections[1];
+      await act(async () => second.open());
+      await act(async () => second.event("invitations.ready"));
+      assert.equal(api.mock.callCount(), 5);
+      await act(async () => root.render(null));
+      assert.equal(second.readyState, 3);
     },
   );
   await suite.test(

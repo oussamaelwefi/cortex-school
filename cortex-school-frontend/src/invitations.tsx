@@ -24,6 +24,7 @@ import { findEndpoint, useApi } from "./api";
 import { getLocale, t, useLanguage } from "./i18n";
 import { ErrorBox, Loading, Modal, useRemote } from "./ui";
 import { InvitationCsvImport } from "./invitation-import";
+import { useInvitationUpdates } from "./invitation-updates";
 
 type InvitationRole = "school_admin" | "teacher" | "guardian";
 export type Invitation = {
@@ -84,6 +85,7 @@ const groups: { value: Group; title: string }[] = [
 ];
 const pageSize = 12;
 export const invitationRefreshMs = 15000;
+const invitationReconcileMs = 60000;
 const normalize = (value: string) =>
   value
     .normalize("NFD")
@@ -508,7 +510,11 @@ function InvitationDetails({
   );
 }
 
-export function InvitationsPage() {
+export function InvitationsPage({
+  getAccessToken,
+}: {
+  getAccessToken?: () => Promise<string | undefined>;
+}) {
   useLanguage();
   const api = useApi();
   const [params, setParams] = useSearchParams();
@@ -538,6 +544,17 @@ export function InvitationsPage() {
   } | null>(null);
   const reload = useCallback(() => setRevision((value) => value + 1), []);
   const fetching = useRef(true);
+  const liveRefreshPending = useRef(false);
+  const refreshFromSocket = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    if (fetching.current) {
+      liveRefreshPending.current = true;
+      return;
+    }
+    fetching.current = true;
+    reload();
+  }, [reload]);
+  const liveConnected = useInvitationUpdates(getAccessToken, refreshFromSocket);
   useEffect(() => {
     let active = true;
     fetching.current = true;
@@ -555,19 +572,27 @@ export function InvitationsPage() {
           }));
       })
       .finally(() => {
-        if (active) fetching.current = false;
+        if (!active) return;
+        fetching.current = false;
+        if (liveRefreshPending.current) {
+          liveRefreshPending.current = false;
+          refreshFromSocket();
+        }
       });
     return () => {
       active = false;
     };
-  }, [api, revision]);
+  }, [api, revision, refreshFromSocket]);
   useEffect(() => {
     const refreshVisiblePage = () => {
       if (document.visibilityState !== "visible" || fetching.current) return;
       fetching.current = true;
       reload();
     };
-    const timer = window.setInterval(refreshVisiblePage, invitationRefreshMs);
+    const timer = window.setInterval(
+      refreshVisiblePage,
+      liveConnected ? invitationReconcileMs : invitationRefreshMs,
+    );
     window.addEventListener("focus", refreshVisiblePage);
     document.addEventListener("visibilitychange", refreshVisiblePage);
     return () => {
@@ -575,7 +600,7 @@ export function InvitationsPage() {
       window.removeEventListener("focus", refreshVisiblePage);
       document.removeEventListener("visibilitychange", refreshVisiblePage);
     };
-  }, [reload]);
+  }, [liveConnected, reload]);
   const records = remote.data ?? [];
   const counts = {
     all: remote.data === null ? null : records.length,

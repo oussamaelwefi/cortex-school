@@ -11,6 +11,7 @@ from core.auth import get_current_user
 from core.config import settings
 from main import create_app
 from modules.invitations.models import Invitation, InvitationSendStatus
+from modules.webhooks import router as workos_webhooks
 
 
 SECRET = "test-workos-endpoint-secret"
@@ -78,10 +79,17 @@ async def _deliver(client, state="accepted", *, organization_id=ORG_ID,
 
 
 @pytest.mark.asyncio
-async def test_signed_acceptance_survives_duplicate_and_delayed_creation(webhook_client, db_session):
+async def test_signed_acceptance_survives_duplicate_and_delayed_creation(webhook_client, db_session, monkeypatch):
     invitation = _invitation()
     db_session.add(invitation)
     await db_session.commit()
+    published = []
+
+    async def publish(organization_id):
+        await db_session.refresh(invitation)
+        published.append((organization_id, invitation.workos_state))
+
+    monkeypatch.setattr(workos_webhooks, "publish_invitation_change", publish)
 
     response = await _deliver(webhook_client, trailing_slash=False)
     assert response.status_code == 200, response.text
@@ -94,6 +102,7 @@ async def test_signed_acceptance_survives_duplicate_and_delayed_creation(webhook
     assert (await _deliver(webhook_client, "pending")).status_code == 200
     await db_session.refresh(invitation)
     assert invitation.updated_at == accepted_updated_at
+    assert published == [(ORG_ID, "accepted")]
 
     invitations = await webhook_client.get("/api/invitations/")
     assert invitations.json()[0]["workos_state"] == "accepted"
