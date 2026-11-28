@@ -236,6 +236,11 @@ Lookups do not publish, mark messages as read or acknowledge them. Failed reques
 keep the question for an explicit retry. Deploy the backend changes with the
 frontend; the existing LLM and WorkOS configuration stays on the backend.
 
+Open **History** in the Assistant to resume or delete a conversation. Completed
+turns are saved for the current user, school, and workspace role. The backend
+rechecks school-data replies when reopening a conversation and displays a
+placeholder if the supporting records or access can no longer be verified.
+
 The chat includes an explicit **School data access** panel. Administrators change
 school-wide access under **School settings → AI settings**; their chat panel
 shows read-only status. Guardians can opt their
@@ -247,8 +252,8 @@ are never sent as conversation history. With data off, the welcome and suggestio
 offer general writing help. The backend enforces the same controls for both tools
 and excludes protected family records from all workspaces.
 
-Deploy both services and apply backend migration `b4c6d8e0f2a3` with
-`python -m alembic upgrade head` before using these controls.
+Deploy both services and run `python -m alembic upgrade head` to apply the
+chat privacy and saved-conversation migrations.
 
 ```powershell
 npm run contracts

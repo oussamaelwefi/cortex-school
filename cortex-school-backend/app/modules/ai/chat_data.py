@@ -59,12 +59,13 @@ def selected_role(current_user: dict, requested: ChatRole | None) -> ChatRole:
 
 
 class SchoolDataAccess:
-    def __init__(self, session, current_user, role):
+    def __init__(self, session, current_user, role, *, membership_verified=False):
         self.session = session
         self.user = current_user
         self.role = selected_role(current_user, role)
         self.user_id = current_user["user_id"]
         self.organization_id = current_user["organization_id"]
+        self.membership_verified = membership_verified
         self.ready = False
         self.sources: dict[str, ChatSource] = {}
         self._source_keys = {}
@@ -73,9 +74,10 @@ class SchoolDataAccess:
 
     async def ensure_access(self):
         if not self.ready:
-            await _active_viewer(
-                self.user, "school_admin" if self.role == "admin" else self.role
-            )
+            if not self.membership_verified:
+                await _active_viewer(
+                    self.user, "school_admin" if self.role == "admin" else self.role
+                )
             # This is a fresh request session. PostgreSQL prevents accidental writes.
             await self.session.execute(text("SET TRANSACTION READ ONLY"))
             await self.session.execute(text("SET LOCAL statement_timeout = '4000ms'"))

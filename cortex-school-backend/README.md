@@ -239,6 +239,25 @@ function/tool calling; the project's configured `openai/gpt-4.1-mini` can use th
 request format. Generic writing help needs no database lookup. Membership or
 provider failures return a safe error rather than an unverified data answer.
 
+### Saved conversations
+
+The Assistant saves completed turns in PostgreSQL. Send a `client_message_id` on
+the first `POST /api/ai/chat/` request to start a conversation, then include the
+returned `conversation_id` and a new `client_message_id` on each follow-up. Reuse
+the same message ID when retrying a send. Requests without either ID use the
+stateless chat endpoint behavior.
+
+`GET /api/ai/chat/conversations/` lists saved conversations. Read or delete an
+individual conversation at `/api/ai/chat/conversations/{conversation_id}/`. The
+API scopes each operation to the signed-in user's current school and workspace
+role. It sends recent user questions to the model for context. When opening
+history, it verifies the school data used by a saved answer before returning the
+answer or its sources. Unavailable answers display a placeholder. Deletion also
+removes the stored messages.
+
+Apply migration `08b5d2a9c4e1` with `python -m alembic upgrade head` before
+deploying the backend and frontend that use saved conversations.
+
 ### Chat data privacy controls
 
 Administrators can switch school-data access on/off under **School settings →

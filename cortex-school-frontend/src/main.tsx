@@ -680,7 +680,7 @@ function Shell({
                         />
                       ) : (
                         <ResourcePage
-                          key={page.key}
+                          key={page.key === "assistant" ? `${page.key}:${organization}` : page.key}
                           page={page}
                           role={role}
                           choices={choices}

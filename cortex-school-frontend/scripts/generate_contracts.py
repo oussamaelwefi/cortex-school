@@ -146,6 +146,8 @@ for path,tree in trees.items():
             routes.append({'id':n.name,'title':n.name.replace('_',' ').capitalize(),'method':d.func.attr.upper(),'path':url,'module':module,'role':role,'params':params,'body':body,'upload':upload})
             if url == '/ai/chat/access/':
                 routes[-1]['role'] = 'guardian' if d.func.attr == 'put' else 'shared'
+            elif url.startswith('/ai/chat/conversations/'):
+                routes[-1]['role'] = 'shared'
 target = Path(__file__).resolve().parents[1]/'src/contracts.json'
 target.write_text(json.dumps(routes,indent=2),encoding='utf-8')
 print(f'Generated {len(routes)} business endpoint contracts in {target}')

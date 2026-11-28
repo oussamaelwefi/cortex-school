@@ -4,6 +4,7 @@ import logging
 import re
 import time
 
+from ai.chat.evidence import ChatEvidence
 from ai.chat.schemas import SchoolDataQuery
 from ai.llm import LLMProviderError, get_chat_model
 from core.pydantic import CustomBaseModel
@@ -59,10 +60,12 @@ async def school_reply(
     language="fr",
     request_id="unknown",
     model=None,
+    evidence: ChatEvidence | None = None,
+    membership_verified=False,
 ):
     from modules.ai.chat_data import SchoolDataAccess
 
-    access = SchoolDataAccess(session, current_user, role)
+    access = SchoolDataAccess(session, current_user, role, membership_verified=membership_verified)
     model = (model if model is not None else get_chat_model()).bind_tools(
         [QuerySchoolData, SearchSchoolPolicies, ChatAnswer],
         tool_choice="required",
@@ -132,6 +135,8 @@ async def school_reply(
                                     ),
                                 },
                             )
+                            if evidence is not None:
+                                evidence.revision = access.privacy_revision
                             return {
                                 "reply": reply,
                                 "sources": [
@@ -141,9 +146,10 @@ async def school_reply(
                             }
                     elif call["name"] == QuerySchoolData.__name__:
                         tool_count += 1
-                        result = await access.query(
-                            SchoolDataQuery.model_validate(call["args"])
-                        )
+                        query = SchoolDataQuery.model_validate(call["args"])
+                        result = await access.query(query)
+                        if evidence is not None:
+                            evidence.record(result, query=query)
                     elif call["name"] == SearchSchoolPolicies.__name__:
                         args = SearchSchoolPolicies.model_validate(call["args"])
                         if any(
@@ -157,6 +163,8 @@ async def school_reply(
                         else:
                             tool_count += 1
                             result = await access.search_policies(args.keywords)
+                            if evidence is not None:
+                                evidence.record(result, keywords=args.keywords)
                     else:
                         result = {
                             "status": "unsupported_tool",

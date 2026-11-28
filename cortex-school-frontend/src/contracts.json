@@ -415,6 +415,126 @@
     "upload": false
   },
   {
+    "id": "get_chat_conversations",
+    "title": "Get chat conversations",
+    "method": "GET",
+    "path": "/ai/chat/conversations/",
+    "module": "ai",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "enum": [
+          "admin",
+          "teacher",
+          "guardian"
+        ],
+        "nullable": true,
+        "name": "role",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "default": 0
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 30
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "get_chat_conversation",
+    "title": "Get chat conversation",
+    "method": "GET",
+    "path": "/ai/chat/conversations/{conversation_id}/",
+    "module": "ai",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "conversation_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "admin",
+          "teacher",
+          "guardian"
+        ],
+        "nullable": true,
+        "name": "role",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "nullable": true,
+        "name": "before_turn",
+        "in": "query",
+        "required": false,
+        "default": null
+      },
+      {
+        "type": "integer",
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "default": 12
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
+    "id": "remove_chat_conversation",
+    "title": "Remove chat conversation",
+    "method": "DELETE",
+    "path": "/ai/chat/conversations/{conversation_id}/",
+    "module": "ai",
+    "role": "shared",
+    "params": [
+      {
+        "type": "string",
+        "format": "uuid",
+        "name": "conversation_id",
+        "in": "path",
+        "required": true,
+        "default": null
+      },
+      {
+        "type": "string",
+        "enum": [
+          "admin",
+          "teacher",
+          "guardian"
+        ],
+        "nullable": true,
+        "name": "role",
+        "in": "query",
+        "required": false,
+        "default": null
+      }
+    ],
+    "body": null,
+    "upload": false
+  },
+  {
     "id": "chat",
     "title": "Chat",
     "method": "POST",
@@ -449,6 +569,18 @@
           ],
           "required": false,
           "default": "fr"
+        },
+        "conversation_id": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "required": false
+        },
+        "client_message_id": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "required": false
         }
       },
       "name": "ChatRequest"

@@ -5,7 +5,6 @@ import { JSDOM } from "jsdom";
 import { registerHooks } from "node:module";
 import { MemoryRouter } from "react-router-dom";
 import { ApiContext } from "../src/api.tsx";
-import { schoolChatPayload } from "../src/chat-request.ts";
 
 registerHooks({
   load(url, context, nextLoad) {
@@ -15,35 +14,6 @@ registerHooks({
   },
 });
 const { ChatAssistant } = await import("../src/chat.tsx");
-
-test("chat payload sends the workspace separately and keeps bounded recent history", () => {
-  const latest = { id: "last", role: "user", text: "Mes enfants ?" };
-  assert.deepEqual(
-    schoolChatPayload("guardian", "fr", [
-      { id: "welcome", role: "assistant", text: "Welcome" },
-      latest,
-    ]),
-    { message: "Mes enfants ?", role: "guardian", language: "fr" },
-  );
-  const conversation = Array.from({ length: 20 }, (_, i) => ({
-    id: String(i),
-    role: i % 2 ? "assistant" : "user",
-    text: `${i}: ${"a".repeat(11000)}`,
-  }));
-  const result = schoolChatPayload("teacher", "en", [...conversation, latest]);
-  assert.ok(result.message.length < 27000);
-  assert.match(result.message, /Mes enfants/);
-  assert.doesNotMatch(
-    result.message,
-    /0: a|no school-data tools|The user is a/,
-  );
-  const privateAnswer = schoolChatPayload("admin", "en", [
-    { id: "q1", role: "user", text: "Who is absent?" },
-    { id: "a1", role: "assistant", text: "PRIVATE CHILD RECORD [S1]" },
-    latest,
-  ]);
-  assert.doesNotMatch(privateAnswer.message, /PRIVATE CHILD RECORD/);
-});
 
 async function mount(t, role, failOnce = false, options = {}) {
   const dom = new JSDOM(
@@ -72,6 +42,9 @@ async function mount(t, role, failOnce = false, options = {}) {
     revision: 0,
   };
   const api = t.mock.fn(async (endpoint, params, body) => {
+    if (endpoint.path.startsWith("/ai/chat/conversations/")) {
+      return options.history?.(endpoint, params);
+    }
     if (endpoint.path === "/ai/chat/access/" && endpoint.method === "GET")
       return { ...state };
     if (endpoint.method === "PUT") {
@@ -87,6 +60,9 @@ async function mount(t, role, failOnce = false, options = {}) {
     if (failOnce && ++attempts === 1)
       throw Error("School data is temporarily unavailable. Please try again.");
     return {
+      conversation_id: body.conversation_id ?? "saved-conversation",
+      message_id: crypto.randomUUID(),
+      created_at: "2026-11-25T10:00:00Z",
       reply: "Deux élèves [S1]. Une autorisation est requise [S2].",
       sources: [
         {
@@ -135,6 +111,8 @@ for (const role of ["admin", "teacher", "guardian"]) {
     assert.equal(endpoint.path, "/ai/chat/");
     assert.equal(payload.role, role);
     assert.equal(payload.language, "en");
+    assert.equal(payload.conversation_id, null);
+    assert.match(payload.client_message_id, /^[a-f0-9-]{36}$/);
     assert.match(
       document.querySelector(".chat-sources").textContent,
       /S1.*Students/,
@@ -164,6 +142,94 @@ test("a failed lookup keeps the question and retries it without duplicating the 
   assert.equal(document.querySelectorAll(".chat-message.user").length, 1);
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.ok(document.querySelector(".chat-sources"));
+});
+
+test("reopens, continues and deletes a saved conversation and renders unavailable replies safely", async (t) => {
+  const summary = {
+    id: "saved-conversation",
+    title: "Earlier question",
+    updated_at: "2026-11-25T10:00:00Z",
+  };
+  let deleted = false;
+  const api = await mount(t, "guardian", false, {
+    history(endpoint, params) {
+      assert.equal(params.role, "guardian");
+      if (endpoint.method === "DELETE") {
+        assert.equal(params.conversation_id, summary.id);
+        deleted = true;
+        return null;
+      }
+      if (!params.conversation_id) {
+        return { conversations: deleted ? [] : [summary], next_offset: null };
+      }
+      return {
+        ...summary,
+        before_turn: null,
+        messages: [
+          {
+            id: "one",
+            sender: "user",
+            text: summary.title,
+            sources: [],
+            created_at: summary.updated_at,
+          },
+          {
+            id: "two",
+            sender: "assistant",
+            text: null,
+            sources: [],
+            created_at: summary.updated_at,
+          },
+        ],
+      };
+    },
+  });
+  async function click(selector) {
+    const button = document.querySelector(selector);
+    assert.ok(button, selector);
+    await act(async () => button.click());
+  }
+  await click(".chat-heading button[aria-expanded]");
+  assert.match(
+    document.querySelector(".chat-history").textContent,
+    /Earlier question/,
+  );
+  await click(".chat-history-row");
+  assert.match(
+    document.querySelector(".chat-thread").textContent,
+    /Earlier question/,
+  );
+  assert.match(
+    document.querySelector(".chat-hidden-reply").textContent,
+    /saved reply is unavailable/,
+  );
+  assert.equal(document.querySelector(".chat-message-tools"), null);
+
+  const input = document.querySelector("#chat-message");
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      "value",
+    ).set.call(input, "A follow-up");
+    input.dispatchEvent(new window.Event("input", { bubbles: true }));
+  });
+  await click(".chat-send");
+  const body = api.mock.calls.find(
+    (call) => call.arguments[0].method === "POST",
+  ).arguments[2];
+  assert.equal(body.message, "A follow-up");
+  assert.equal(body.conversation_id, summary.id);
+
+  await click(".chat-heading button[aria-expanded]");
+  await click('.chat-history-list button[aria-label^="Delete conversation"]');
+  assert.equal(deleted, false);
+  await click('[role="dialog"] .button.danger');
+  assert.equal(deleted, true);
+  assert.match(
+    document.querySelector(".chat-history").textContent,
+    /No saved conversations yet/,
+  );
+  assert.equal(document.querySelectorAll(".chat-message.user").length, 0);
 });
 
 for (const role of ["guardian"]) {

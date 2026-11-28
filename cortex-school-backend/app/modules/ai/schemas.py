@@ -12,6 +12,7 @@ from pydantic import (
 )
 from typing_extensions import Annotated
 
+from ai.chat.schemas import ChatSource
 from core.pydantic import CustomBaseModel
 from modules.student_updates.schemas import UpdateTarget, UpdateText, UpdateTitle
 
@@ -172,3 +173,44 @@ class ChatDataAccessResponse(CustomBaseModel):
     can_manage_school: bool
     can_manage_personal: bool
     revision: int
+
+
+class ChatRequest(CustomBaseModel):
+    message: str = Field(min_length=1, max_length=30000)
+    role: Literal["admin", "teacher", "guardian"] | None = None
+    language: Literal["fr", "en"] = "fr"
+    conversation_id: uuid.UUID | None = None
+    client_message_id: uuid.UUID | None = None
+
+
+class ChatResponse(CustomBaseModel):
+    reply: str
+    sources: list[ChatSource] = Field(default_factory=list)
+    conversation_id: uuid.UUID | None = None
+    message_id: uuid.UUID | None = None
+    created_at: datetime | None = None
+    hidden: bool = False
+
+
+class ChatConversationSummary(CustomBaseModel):
+    id: uuid.UUID
+    title: str
+    updated_at: datetime
+
+
+class ChatConversationList(CustomBaseModel):
+    conversations: list[ChatConversationSummary]
+    next_offset: int | None
+
+
+class ChatHistoryMessage(CustomBaseModel):
+    id: uuid.UUID
+    sender: Literal["user", "assistant"]
+    text: str | None
+    sources: list[ChatSource]
+    created_at: datetime
+
+
+class ChatConversationDetail(ChatConversationSummary):
+    messages: list[ChatHistoryMessage]
+    before_turn: int | None
